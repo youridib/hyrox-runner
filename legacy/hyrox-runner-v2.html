@@ -1,0 +1,1845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hyrox">
+<meta name="application-name" content="Hyrox Runner">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="icon" type="image/png" sizes="180x180" href="data:image/png;base64,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">
+<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiSHlyb3ggUnVubmVyIiwic2hvcnRfbmFtZSI6Ikh5cm94IiwiZGVzY3JpcHRpb24iOiJFdmlkZW5jZS1iYXNlZCBIeXJveCBydW5uaW5nIHBsYW5uZXIiLCJzdGFydF91cmwiOiIuLyIsInNjb3BlIjoiLi8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsIm9yaWVudGF0aW9uIjoicG9ydHJhaXQiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBhMGEwYiIsInRoZW1lX2NvbG9yIjoiIzBhMGEwYiIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3BuZztiYXNlNjQsaVZCT1J3MEtHZ29BQUFBTlNVaEVVZ0FBQUxRQUFBQzBDQUlBQUFDeXI1RmxBQUFGMmtsRVFWUjQydTNkYldoVmRSekE4Zk0vOSt3KzM3dTd6VXp2N0xtMkZZd3dSMlcyWG9oUDRDTW1SR0dvWUVtRjRZdFVNQU1MQW1FK1pJa1FSSUtobFdLNm1aRUZNeHlaTTUxSTZrd3pjektmcG5jUDkvbng5QzdJYnRFNTNvZHp6cjZmdCtNK2JPZkw3L3pQUGVlZUNiZmJJd0g1eVB3SlFCd2dEaEFIaUFQRUFlSUFjWUE0UUJ3Z0RvQTRRQndnRGhBSGlBUEVBZUlBY1lBNFFCd0FjWUE0UUJ3Z0RoQUhpQVBFQWVJQWNZQTRBT0lBY1lBNFFCd2dEaEFIaUFQRUFlSUFjWUE0QU9JQWNZQTRVRXhLb1o1b3pRdisxNmQ2TlQyazQwenkrWFczQ3ZVRzlxNGM4VXk5WGRORHRoeUlyUGx5cU5pLzVuL0w1cVIwUmsxbDFWaFNIWWlxL2RIYzlZSHM1WnZabnB2Wjd0NzA2WjUwTkttYVBnN29ZNU1sbTEwNEplRjNTYU1DdC84MHAwcm5yMlIrT0pNOGVDcHg2SFF5a3lNTy9MWFhGMUo5clZKZnF5eVo3TGtWenUwK0V2LzQrOGpsbTFuV0hQaWJHcC84Nm1SUDU5cTdQMWdVcVBISnhJRi9qSHBaZXFuWmZmajlrVE9iWE1TQlBLcTg4aWV2VmIwMXkwY2N5RU1JYWNVYzM3SVpYdUpBZnF2bStxYzg3aVFPNUxkeFVTRGdrWWtEZWR6bGw5K1k1aVVPNUxkNGtzZmpFTVNCUER3T01YMWM0WTlzK1lTMDZQN3RGSkpkRVY2bkNIamt1cURTZUcvRnpDWlhRNjMrelRIOUNlZk93ekhpc0loVVJnMUYxRkFrOS92MXpMY25FaTJ0NGFmcjdPc1hCQjRacldlalBGVm5GMEpTQzNxU2p0MktnUnc1bDVyMGJ0K0ppMmtkajYzMnltTnFiS3c1ckN5ZVVoZDhGRXFrOUV5QSswY3F4R0Z4MXdheTJ6djByQjZDVlV5T1llQ2JFd2w5eHl6RVlYM0hMNlJ5Mm5jc1RqdHhEQU94cERvWTFYelZWenlsRXNld01CRFRISWVPbm9qRGxHeXk1bjNFWUl3NGhvZEt0K1k0emwvTkVJZjErVjJ5MzZWdDAvUkhjajJGdnZDWU9JeW82ZUVLb1hGd2RPbjZYSlU0ekdlVzlvdUhXNC9HQy80MnlubmlyZmt4eDQxUGc2UndtM3RHMk9hTjF4WkhKS0cySFN0OEhFd09ZL0U0eExhbDFYWkYyMDVsZTBjc1ZvUnZUWExLM2tBbU5EZzJMS3g4UU9QNXN4dUR1WmE5NFdLOEgrSW9td3FiOERwRnBVZHVDQ3FOOTFYTWFuTFY2N3JZNSswZGcwUHhISEdZVWxHWFZpMnQ0ZGFmNDBWNmN0WWNKcmExUGRyU0dpN2U4ek01VENtVlVkLzVZbWhyZTdTb3IwSWM1blB5ai9US3p3YTdMcWFLL1VMRVlTYVgrckpyOXd4OTFSbFhTM0szSCtJd2dXUmEzZCtWMk5FUjYraE9xaVc4Q1JRTFVoTVFRZ3E0NVZFQm15S0xVcjR1Y1ppQVhSRVRHeDJiRndjNjE0NmNOdFpKSE1oalRJMXQyOUxxRFFzRFNrbTJXem5YSEdXLzFhUkp6WC9PSGF5eUxkZ2NTcWFMdXdCaGNwalN4RWJIbGxjQ3hWNkJFSWRaeld4eXJaaFQzSHVDY1NoYjZyMm5FSkxISVNyZGNsMVFHZmVnZmZhVHJ2cWd6cTJ3Yklhdm96djE0OWtrazhNaVZGV0tKTlRlVVBiZ3FlUzZ0bkR6Nmh2ek40VXU5ZW01L0ZNVzB1YkZBYmRERUlkbGZYY3lNZm05dnAvTzZmazR2TGJhdG55Mmp6aXNiQ0NhZTNIanJWOTY5RndrdkdTS3QyNjBRaHhXRmt1cUwyOEs5V3YvMXBvaVM2dm4rWW5ENHE3MFoxZC9QcWpqZ2RQR09zYzlaQ2NPaTl0MU9IN29qSjZqajFWemZjUmhmV3QyRHVrNDlkcjhxR044blowNExPNVVUM3AzcDU3TFFwY1grak14NGpDaTlXM2hyUGJyeVo5dEtQRHdJQTRqdW5BdHM4Y0F3NE00REdyRHZyQ09PejhWZG5nUWgwSDlab0RoUVJ3TUQrSXdvZk5YTTN1UGxuTjRFSWZSRDF2S09EeUl3K2pEUTk5ZFdRcHlIUkJ4V0hQbE1hSEJjZWRYMUJLSDBmMTZKZE9tNjN2MGQzNmRCM0dZWWVWUnB1RkJIR1lZSHIyWmZjZktNRHlJd3pTSExXckpod2R4bU1QWjNzelh4MHM5UElqRE5GcGFTejA4aU1OTXcyTi9sNTUvMHFON2VBaTMyOFBmSFV3T0VBZUlBOFFCNGdCeGdEaEFIQ0FPRUFkQUhDQU9FQWVJQThRQjRnQnhnRGhBSENBT2dEaEFIQ0FPRUFkS3hxRC9xV25pZ1ErSDI1Wm9uL29ta3dQc1ZrQWNJQTRRQjBBYytEKzRQd2VZSENBT0VBZUlBOFFCNGdCeGdEaEFIQ0FPZ0RoQUhDQU9FQWVJQThRQjRnQnhnRGhBSEFCeGdEaEFIQ0FPRUFlSUE4UUI0Z0J4Z0RnQTRnQnhnRGhBSENpSlB3SGphcjBuaVROOUZRQUFBQUJKUlU1RXJrSmdnZz09Iiwic2l6ZXMiOiIxODB4MTgwIiwidHlwZSI6ImltYWdlL3BuZyIsInB1cnBvc2UiOiJhbnkifV19">
+<title>Hyrox Runner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+:root {
+  color-scheme: dark light;
+  --bg: #0a0a0b;
+  --surface: #131316;
+  --surface-2: #1c1c20;
+  --border: #26262c;
+  --border-hover: #383840;
+  --text: #f0f0f2;
+  --text-muted: #8a8a90;
+  --text-dim: #56565a;
+  --intervals: #f4a825;
+  --tempo: #ec5a80;
+  --long: #4cc39d;
+  --compromised: #a68af7;
+  --hyrox: #7a7a82;
+  --shakeout: #5a5a62;
+  --race: #ef4444;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --surface-2: #f4f4f5;
+    --border: #e5e5e7;
+    --border-hover: #cfcfd4;
+    --text: #18181b;
+    --text-muted: #71717a;
+    --text-dim: #a1a1aa;
+    --intervals: #b45309;
+    --tempo: #be185d;
+    --long: #047857;
+    --compromised: #6d28d9;
+    --hyrox: #52525b;
+    --shakeout: #71717a;
+    --race: #dc2626;
+  }
+}
+/* Native app feel: no tap highlights, no long-press callouts, no overscroll bounce */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+html, body { overscroll-behavior: none; }
+input, select, textarea, [contenteditable] {
+  -webkit-user-select: auto;
+  user-select: auto;
+  -webkit-touch-callout: default;
+}
+/* Standalone-mode adjustments: use safe-area insets fully */
+@media (display-mode: standalone) {
+  body { user-select: none; -webkit-user-select: none; }
+}
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+.mono {
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-feature-settings: 'zero', 'ss01';
+}
+.app {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+  min-height: 100%;
+}
+button { font-family: inherit; }
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 36px;
+}
+.wordmark {
+  font-family: 'JetBrains Mono';
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.settings-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 8px;
+  margin: -8px;
+  border-radius: 8px;
+  transition: color 0.15s, background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.settings-btn:hover { color: var(--text); background: var(--surface); }
+
+/* Phase hero */
+.phase-hero { margin-bottom: 36px; }
+.phase-eyebrow {
+  font-family: 'JetBrains Mono';
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.phase-label {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin: 0 0 6px;
+  line-height: 1.1;
+}
+.phase-meta {
+  font-family: 'JetBrains Mono';
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.phase-meta .num { color: var(--text); font-weight: 500; }
+.phase-desc {
+  margin: 14px 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 42ch;
+}
+
+/* Race week banner */
+.race-week-banner {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.10), rgba(239, 68, 68, 0.02));
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 28px;
+}
+.race-week-banner .label {
+  font-family: 'JetBrains Mono';
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--race);
+  margin-bottom: 6px;
+}
+.race-week-banner .title { font-size: 16px; font-weight: 600; margin-bottom: 4px; letter-spacing: -0.01em; }
+.race-week-banner .desc { font-size: 13px; color: var(--text-muted); }
+
+/* Today */
+.today {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 36px;
+  position: relative;
+  overflow: hidden;
+}
+.today::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--accent-glow, transparent) 0%, transparent 60%);
+  opacity: 0.08;
+  pointer-events: none;
+}
+.today-eyebrow {
+  font-family: 'JetBrains Mono';
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  position: relative;
+}
+.today-title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  line-height: 1.2;
+  position: relative;
+}
+.today-title .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px 0 currentColor;
+}
+.today-pace {
+  font-family: 'JetBrains Mono';
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  position: relative;
+}
+.today-details {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  position: relative;
+}
+.today-why {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  position: relative;
+}
+
+/* Section title */
+.section-title {
+  font-family: 'JetBrains Mono';
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.section-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
+
+/* Week */
+.week { margin-bottom: 36px; }
+.week-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.day-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: border-color 0.15s, background 0.15s;
+  overflow: hidden;
+}
+.day-row:hover { border-color: var(--border-hover); }
+.day-row.is-today {
+  background: var(--surface-2);
+  border-color: var(--border-hover);
+}
+.day-row.is-race {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.06), var(--surface));
+}
+.day-row-header {
+  padding: 14px 16px;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 68px 1fr 16px;
+  gap: 14px;
+  align-items: center;
+  user-select: none;
+}
+.day-row-label {
+  font-family: 'JetBrains Mono';
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.day-row.is-today .day-row-label { color: var(--text); }
+.pin-dot {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--text-dim);
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.day-row-title {
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.day-row-title .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.day-row-caret {
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1;
+  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.day-row.is-expanded .day-row-caret { transform: rotate(90deg); color: var(--text-muted); }
+.day-row-expanded {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.day-row-expanded .pace-line {
+  font-family: 'JetBrains Mono';
+  color: var(--text);
+  font-size: 13px;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+.day-row-expanded .why {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 10px;
+  font-style: italic;
+}
+
+/* Type picker */
+.type-picker-label {
+  font-family: 'JetBrains Mono';
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.type-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 16px;
+}
+.type-chip {
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono';
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.type-chip:hover { color: var(--text); border-color: var(--border-hover); }
+.type-chip.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+.type-chip.type-auto.active {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border-hover);
+}
+
+/* Pace zones */
+.pace-zones { margin-bottom: 40px; }
+.pace-zone-list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.pace-zone-row {
+  padding: 13px 16px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 14px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.pace-zone-row:last-child { border-bottom: none; }
+.pace-zone-row .label {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pace-zone-row .label .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+}
+.pace-zone-row .value {
+  font-family: 'JetBrains Mono';
+  font-size: 13px;
+  color: var(--text);
+  text-align: right;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.pace-zone-row .per400 {
+  font-family: 'JetBrains Mono';
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: right;
+  min-width: 78px;
+  white-space: nowrap;
+}
+
+/* Footer */
+.footer {
+  font-family: 'JetBrains Mono';
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: center;
+  margin-top: 48px;
+  line-height: 1.6;
+}
+
+/* Settings drawer */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 10;
+  animation: fadeIn 0.15s ease-out;
+}
+.drawer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  z-index: 11;
+  padding: 16px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+  max-height: 88vh;
+  overflow-y: auto;
+  animation: slideUp 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (min-width: 640px) {
+  .drawer {
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 460px;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    max-height: 85vh;
+    animation: fadeInScale 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes fadeInScale {
+  from { transform: translate(-50%, -50%) scale(0.97); opacity: 0; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+.drawer-handle {
+  width: 36px; height: 4px;
+  background: var(--border-hover);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+@media (min-width: 640px) { .drawer-handle { display: none; } }
+.drawer-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.drawer-close {
+  border: none; background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  margin: -6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.drawer-close:hover { color: var(--text); background: var(--surface); }
+/* Touch feedback for common tap targets */
+.settings-btn:active, .drawer-close:active { background: var(--surface-2); }
+.day-row-header:active { background: var(--surface-2); }
+.type-chip:active { transform: scale(0.96); }
+.day-picker-btn:active { transform: scale(0.96); }
+.reset-btn:active { color: var(--race); }
+.setting-group { margin-bottom: 22px; }
+.setting-label {
+  font-family: 'JetBrains Mono';
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  display: block;
+}
+.date-input, .select-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-family: 'JetBrains Mono';
+  font-size: 16px;
+  transition: border-color 0.15s;
+}
+.select-input { font-family: 'Inter'; }
+.date-input:focus, .select-input:focus {
+  outline: none;
+  border-color: var(--border-hover);
+}
+.pace-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pace-input {
+  width: 62px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 0;
+  color: var(--text);
+  font-family: 'JetBrains Mono';
+  font-size: 16px;
+  text-align: center;
+}
+.pace-input:focus { outline: none; border-color: var(--border-hover); }
+.pace-sep { color: var(--text-muted); font-family: 'JetBrains Mono'; font-size: 18px; font-weight: 500; }
+.pace-unit { font-size: 13px; color: var(--text-muted); margin-left: 8px; font-family: 'JetBrains Mono'; }
+.day-picker {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.day-picker-btn {
+  padding: 10px 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono';
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.12s;
+  font-weight: 500;
+}
+.day-picker-btn:hover { color: var(--text); border-color: var(--border-hover); }
+.day-picker-btn.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+.setting-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+.reset-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono';
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 8px 0;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.reset-btn:hover { color: var(--race); }
+
+/* Language switch */
+.lang-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.lang-btn {
+  padding: 10px 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--text-muted);
+  font-family: 'Inter';
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.lang-btn:hover { color: var(--text); border-color: var(--border-hover); }
+.lang-btn.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+.lang-btn:active { transform: scale(0.98); }
+
+/* Phase progression indicator */
+.phase-progress {
+  font-family: 'JetBrains Mono';
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: -2px 0 8px;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.deload-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(76, 195, 157, 0.14);
+  color: var(--long);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.day-row.is-deload .day-row-title { opacity: 0.9; }
+.day-row-header .day-deload {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(76, 195, 157, 0.14);
+  color: var(--long);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// ============================================================
+// TRANSLATIONS
+// ============================================================
+const L = {
+  en: {
+    days: {
+      short: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      full:  ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+      two:   ['Mo','Tu','We','Th','Fr','Sa','Su'],
+    },
+    months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    settings: 'Settings',
+    close: 'Close',
+    phase: {
+      past:     { label: 'Race passed',   desc: 'Set a new race date to plan the next block.' },
+      taper:    { label: 'Race week',     desc: 'Volume drops. Short quality only. Trust the work.' },
+      sharpen:  { label: 'Sharpen',       desc: 'Peak race-specificity. Simulations, then taper.' },
+      racespec: { label: 'Race-specific', desc: '1km reps at target pace. First compromised runs.' },
+      build:    { label: 'Build',         desc: 'Intervals lengthen. Threshold work extends.' },
+      base:     { label: 'Base',          desc: 'Build easy volume. Short intervals only.' },
+    },
+    racePassed: 'Race passed',
+    raceToday: 'Race today.',
+    daysToRace: (n) => `${n} day${n===1?'':'s'} to race`,
+    daysToGo:   (n) => `${n} day${n===1?'':'s'} to go`,
+    weekOf: (w, t) => `Week ${w} of ${t}`,
+    deloadBadge: 'Deload',
+    deloadNote: 'Deload week \u2014 same intensity, ~40% less volume. Body consolidates so the next block hits harder.',
+    todayLabel: 'Today',
+    pinnedLabel: 'Pinned',
+    raceDayLabel: 'Race day',
+    thisWeek: 'This week',
+    thisWeekHint: 'Tap a day to see the session. Pick a type to override \u2014 other days rearrange to keep the science right.',
+    paceZones: 'Pace zones',
+    paceZonesSub: (pace) => `from ${pace}/km fresh`,
+    sessionType: 'Session type',
+    raceWeekTitle: 'Race week',
+    raceWeekDesc: 'Volume drops ~40%. Trust the work \u2014 nothing new this week. Sharpen, sleep, fuel.',
+    types: {
+      auto: 'Auto', hyrox: 'Hyrox', intervals: 'Intervals', tempo: 'Tempo',
+      long: 'Long', compromised: 'Compromised', shakeout: 'Shakeout', rest: 'Rest'
+    },
+    zones: {
+      easy: 'Easy Z2', threshold: 'Threshold', target: 'Hyrox target',
+      vo2: 'VO\u2082 intervals', strides: 'Strides'
+    },
+    language: 'Language',
+    raceDate: 'Race date',
+    currentPace: 'Current 1 km pace \u00b7 fresh',
+    paceUnit: 'min/km',
+    paceHint: 'Your best 1 km time when rested. All paces are derived from this.',
+    hyroxDays: 'Hyrox training days',
+    hyroxDaysHint: 'Bulk toggle. Fine-grained control (compromised on Tue, rest on Thu, etc.) is on each day in the week view.',
+    heaviestDay: 'Heaviest Hyrox day (this week)',
+    heaviestDayHint: 'If set, intervals move to a day that isn\u2019t right after this one.',
+    variesWeekly: 'Varies week to week',
+    resetWeek: 'Reset week',
+    savedInBrowser: 'Saved in this browser only.',
+    footerLine1: 'Based on the Hyrox running speed reference',
+    footerLine2: 'Frontiers in Physiology 2025 \u00b7 PMC 5839711',
+    // Deload-suffixed titles
+    deloadSuffix: ' \u00b7 deload',
+    session: {
+      race: {
+        title: 'RACE DAY',
+        pace: '\u2014',
+        details: 'Even splits. First 1 km should feel easy \u2014 adrenaline masks the cost. Settle back into pace within 100 m out of every station.',
+        why: 'Trust the work. Warm up thoroughly, fuel, race smart.'
+      },
+      hyroxTaper: {
+        title: 'Hyrox workout (light)',
+        pace: 'Skills only \u2014 no volume',
+        details: ({dtr}) => `Race is in ${dtr ?? 'a few'} days. Keep this VERY light: technique drills, movement rehearsal at race weight, no intensity. Or skip entirely.`,
+        why: 'Nothing to gain from a hard session now. Everything to lose.'
+      },
+      hyroxNormal: {
+        title: 'Hyrox workout',
+        pace: '\u2014',
+        details: 'Your programmed strength / functional session.',
+        why: 'Not a run day. Recovery for running load happens here.'
+      },
+      restEve: {
+        title: 'Full rest \u2014 race eve',
+        pace: '\u2014',
+        details: 'No training. Walk, mobility, stretch if you feel like it. Pack kit, pin bib. Eat well, hydrate, sleep early.',
+        why: 'Last day before race. Zero training stress.'
+      },
+      restNormal: {
+        title: 'Rest',
+        pace: '\u2014',
+        details: 'Full rest. Recover.',
+        why: 'The body adapts to training between sessions.'
+      },
+      shakeoutEve: {
+        title: 'Race-eve shakeout',
+        pace: ({easy}) => `20 min at ${easy} + 4 strides`,
+        details: '20 min very easy jog + 4 \u00d7 20 s strides at mile pace with full recovery. Nothing more.',
+        why: 'Prime the legs. Feel the paces once. Then rest.'
+      },
+      shakeoutNormal: {
+        title: 'Shakeout or easy',
+        pace: ({easy}) => `Optional 25\u201330 min at ${easy}`,
+        details: 'Full rest is fine. If moving: 25\u201330 min very easy + 4 \u00d7 20 s strides on flat road, full recovery between each.',
+        why: 'Recovery. Strides for a neuromuscular touch-up without cost.'
+      },
+      longTaper: {
+        title: 'Short easy',
+        pace: ({easy}) => easy,
+        details: 'Cut this to 30\u201340 min. Full recovery before race day.',
+        why: 'A long run this week won\u2019t make you fitter. It will make you tired.'
+      },
+      longNormal: {
+        title: 'Long easy Zone 2',
+        pace: ({easy}) => easy,
+        details: ({durationMin, isDeload}) => `${durationMin} min at easy conversational pace. Finish with 4 \u00d7 20 s strides.`,
+        why: ({isDeload}) => isDeload
+          ? 'Deload week \u2014 shorter easy run so aerobic stress drops but the rhythm stays.'
+          : 'Aerobic base. Everything else plateaus without it.'
+      },
+      intervalsTaper: {
+        title: 'Race-pace sharpener',
+        pace: ({p400}) => `Each 400 m in ${p400}`,
+        details: '4 \u00d7 400 m at Hyrox target pace, 200 m jog recovery. 10 min WU / 5 min CD. Stop feeling fresh \u2014 no extras.',
+        why: 'One short quality touch keeps race pace in the legs without accumulating fatigue.'
+      },
+      intervalsRaceSpec: {
+        title: 'Hyrox 400s at target',
+        pace: ({p400}) => `Each 400 m in ${p400}`,
+        details: ({reps}) => `${reps} \u00d7 400 m at Hyrox target pace, 200 m jog recovery. 10 min WU / 5 min CD. Run every rep at the same pace \u2014 not as fast as possible.`,
+        why: ({isDeload}) => isDeload
+          ? 'Deload \u2014 fewer reps at the same target pace. Same signal, less stress.'
+          : 'The single most transferable session \u2014 mirrors race structure exactly.'
+      },
+      intervalsSharpen: {
+        title: 'Hyrox 1000s at target',
+        pace: ({p1k}) => `Each 1 km at ${p1k}`,
+        details: ({reps}) => `${reps} \u00d7 1000 m at Hyrox target pace, 90 s standing recovery. 10 min WU / 5 min CD.`,
+        why: ({isDeload}) => isDeload
+          ? 'Deload \u2014 fewer reps at target. Recover; the sim is coming.'
+          : 'Race-length reps at race pace. If these hold together, race pace will too.'
+      },
+      intervalsBuild: {
+        title: 'Threshold 1000s',
+        pace: ({thr}) => `Each 1 km at ${thr}`,
+        details: ({reps}) => `${reps} \u00d7 1000 m at threshold, 90 s standing rest between reps. 10 min WU / 5 min CD.`,
+        why: ({isDeload}) => isDeload
+          ? 'Deload \u2014 same threshold work, less of it. Absorb the block.'
+          : 'Longer intervals push threshold up and rehearse pace discipline.'
+      },
+      intervalsBase: {
+        title: 'VO\u2082 intervals',
+        pace: ({vo2Low, vo2High}) => `Reps at ~${vo2Low}\u2013${vo2High}/km`,
+        details: ({reps}) => `${reps} \u00d7 2 min hard / 90 s easy jog. 10 min WU / 5 min CD.`,
+        why: ({isDeload}) => isDeload
+          ? 'Deload \u2014 fewer reps to let the aerobic ceiling adapt.'
+          : 'Injury-safe way to build the aerobic ceiling early in the block.'
+      },
+      tempoTaper: {
+        title: 'Short tempo',
+        pace: ({thr}) => `10 min at ${thr}`,
+        details: '10 min at threshold. 10 min WU / 5 min CD. Not the session I\u2019d pick in race week \u2014 a shakeout or the race-pace sharpener is better.',
+        why: 'You picked this. If you\u2019re feeling fresh, a tiny threshold touch is OK.'
+      },
+      tempoBase: {
+        title: 'Threshold tempo',
+        pace: ({thr}) => `At ${thr}`,
+        details: ({durationMin}) => `${durationMin} min continuous. 10 min WU / 5 min CD.`,
+        why: ({isDeload}) => isDeload ? 'Deload \u2014 shorter tempo, same intensity.' : 'Pushes lactate threshold \u2014 less flooded arriving at each station.'
+      },
+      tempoBuild: {
+        title: 'Threshold tempo',
+        pace: ({thr}) => `At ${thr}`,
+        details: ({sets, blockMin}) => `${sets} \u00d7 ${blockMin} min, 2 min easy jog between. 10 min WU / 5 min CD.`,
+        why: ({isDeload}) => isDeload ? 'Deload \u2014 shorter blocks, same threshold pace.' : 'Pushes lactate threshold \u2014 less flooded arriving at each station.'
+      },
+      tempoRaceSpec: {
+        title: 'Threshold tempo',
+        pace: ({thr}) => `At ${thr}`,
+        details: ({sets, blockMin}) => `${sets} \u00d7 ${blockMin} min, 2 min easy jog between. 10 min WU / 5 min CD.`,
+        why: ({isDeload}) => isDeload ? 'Deload \u2014 shorter blocks, same threshold pace.' : 'Higher threshold = starting each Hyrox run less flooded.'
+      },
+      tempoSharpen: {
+        title: 'Threshold tempo',
+        pace: ({thr}) => `At ${thr}`,
+        details: ({sets, blockMin}) => `${sets} \u00d7 ${blockMin} min, 2 min easy jog between. 10 min WU / 5 min CD.`,
+        why: 'Keep the threshold engine primed alongside race-specific work.'
+      },
+      compromisedTaper: {
+        title: 'Compromised (skip this in race week)',
+        pace: ({p1k}) => `1 km at ${p1k}`,
+        details: 'You pinned this in race week \u2014 I\u2019d strongly consider swapping it for the race-pace sharpener. If you must: cut to 2 stations + 1 \u00d7 1 km at target pace, then stop.',
+        why: 'Full compromised in taper is too much load this close to race.'
+      },
+      compromisedRaceSpec: {
+        title: 'Compromised run',
+        pace: ({p1k}) => `1 km at ${p1k}`,
+        details: ({stations, reps1k}) => `${stations} station block${stations>1?'s':''} (each: 500 m row + 40 wall balls + 2 \u00d7 50 m sled) \u2192 immediately ${reps1k} \u00d7 1 km at target pace.`,
+        why: ({isDeload}) => isDeload
+          ? 'Deload \u2014 one light block. Preserve the pattern, cut the load.'
+          : 'Compromised is what actually decides your race. Train what you\u2019ll do.'
+      },
+      compromisedSharpen: {
+        title: 'Compromised block or half race sim',
+        pace: ({p1k}) => `1 km reps at ${p1k}`,
+        details: ({stations, reps1k}) => `${stations} stations + ${reps1k} \u00d7 1 km at target pace. Alternative: run 4 stations + 4 runs of the actual race in order at race weight \u2014 a half sim.`,
+        why: 'Dress rehearsal. You want to have done this before race day.'
+      },
+      compromisedNormal: {
+        title: 'Compromised run',
+        pace: ({p1k}) => `1 km at ${p1k}`,
+        details: 'Station block (500 m row + 40 wall balls + 2 \u00d7 50 m sled) \u2192 immediately 1 km at target pace. Repeat once if fresh.',
+        why: 'Compromised is what actually decides your race. Train what you\u2019ll do.'
+      },
+      fallback: {
+        title: 'Easy 30 min',
+        pace: ({easy}) => easy,
+        details: '30 min at easy pace. 4 strides at the end if fresh.',
+        why: ''
+      }
+    }
+  },
+  nl: {
+    days: {
+      short: ['Ma','Di','Wo','Do','Vr','Za','Zo'],
+      full:  ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'],
+      two:   ['Ma','Di','Wo','Do','Vr','Za','Zo'],
+    },
+    months: ['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Dec'],
+    settings: 'Instellingen',
+    close: 'Sluiten',
+    phase: {
+      past:     { label: 'Wedstrijd voorbij',    desc: 'Stel een nieuwe wedstrijddatum in om het volgende blok te plannen.' },
+      taper:    { label: 'Wedstrijdweek',        desc: 'Volume gaat omlaag. Alleen korte kwaliteit. Vertrouw op het werk.' },
+      sharpen:  { label: 'Aanscherpen',          desc: 'Piek wedstrijdspecifiek. Simulaties, dan aftrainen.' },
+      racespec: { label: 'Wedstrijdspecifiek',   desc: '1 km-herhalingen op doeltempo. Eerste compromised runs.' },
+      build:    { label: 'Opbouw',               desc: 'Intervallen worden langer. Meer drempelwerk.' },
+      base:     { label: 'Basis',                desc: 'Bouw rustig volume op. Alleen korte intervallen.' },
+    },
+    racePassed: 'Wedstrijd voorbij',
+    raceToday: 'Wedstrijd vandaag.',
+    daysToRace: (n) => n===1 ? '1 dag tot wedstrijd' : `${n} dagen tot wedstrijd`,
+    daysToGo:   (n) => n===1 ? '1 dag te gaan' : `${n} dagen te gaan`,
+    weekOf: (w, t) => `Week ${w} van ${t}`,
+    deloadBadge: 'Herstel',
+    deloadNote: 'Herstelweek \u2014 zelfde intensiteit, ~40% minder volume. Lichaam consolideert zodat het volgende blok harder aankomt.',
+    todayLabel: 'Vandaag',
+    pinnedLabel: 'Vastgezet',
+    raceDayLabel: 'Wedstrijddag',
+    thisWeek: 'Deze week',
+    thisWeekHint: 'Tik op een dag om de sessie te zien. Kies een type om te overschrijven \u2014 andere dagen worden aangepast volgens de wetenschap.',
+    paceZones: 'Tempo-zones',
+    paceZonesSub: (pace) => `van ${pace}/km fris`,
+    sessionType: 'Sessietype',
+    raceWeekTitle: 'Wedstrijdweek',
+    raceWeekDesc: 'Volume gaat ~40% omlaag. Vertrouw op het werk \u2014 niets nieuws deze week. Aanscherpen, slapen, voeding.',
+    types: {
+      auto: 'Auto', hyrox: 'Hyrox', intervals: 'Intervallen', tempo: 'Tempo',
+      long: 'Duurloop', compromised: 'Compromised', shakeout: 'Losloopje', rest: 'Rust'
+    },
+    zones: {
+      easy: 'Rustig Z2', threshold: 'Drempel', target: 'Hyrox doeltempo',
+      vo2: 'VO\u2082 intervallen', strides: 'Versnellingen'
+    },
+    language: 'Taal',
+    raceDate: 'Wedstrijddatum',
+    currentPace: 'Huidig 1 km tempo \u00b7 fris',
+    paceUnit: 'min/km',
+    paceHint: 'Jouw beste 1 km tijd uitgerust. Alle tempo\u2019s worden hiervan afgeleid.',
+    hyroxDays: 'Hyrox trainingsdagen',
+    hyroxDaysHint: 'Snelle instelling. Fijnere aanpassingen (compromised op di, rust op do, enz.) per dag in de weekweergave.',
+    heaviestDay: 'Zwaarste Hyrox dag (deze week)',
+    heaviestDayHint: 'Indien ingesteld, worden intervallen verplaatst naar een dag die niet direct erna valt.',
+    variesWeekly: 'Wisselt per week',
+    resetWeek: 'Reset week',
+    savedInBrowser: 'Alleen opgeslagen in deze browser.',
+    footerLine1: 'Gebaseerd op de Hyrox loop-referentie',
+    footerLine2: 'Frontiers in Physiology 2025 \u00b7 PMC 5839711',
+    deloadSuffix: ' \u00b7 herstel',
+    session: {
+      race: {
+        title: 'WEDSTRIJDDAG',
+        pace: '\u2014',
+        details: 'Gelijke splits. Eerste 1 km moet makkelijk voelen \u2014 adrenaline maskeert de kosten. Val binnen 100 m na elk station terug in je tempo.',
+        why: 'Vertrouw op het werk. Warm goed op, tank bij, race slim.'
+      },
+      hyroxTaper: {
+        title: 'Hyrox training (licht)',
+        pace: 'Alleen techniek \u2014 geen volume',
+        details: ({dtr}) => `Wedstrijd is over ${dtr ?? 'enkele'} dagen. Houd het HEEL licht: techniekdrills, bewegingsrepetitie op wedstrijdgewicht, geen intensiteit. Of sla helemaal over.`,
+        why: 'Niets te winnen met een zware sessie nu. Alles te verliezen.'
+      },
+      hyroxNormal: {
+        title: 'Hyrox training',
+        pace: '\u2014',
+        details: 'Jouw geplande kracht / functionele sessie.',
+        why: 'Geen loopdag. Herstel van looptrainingen gebeurt hier.'
+      },
+      restEve: {
+        title: 'Volledige rust \u2014 dag voor wedstrijd',
+        pace: '\u2014',
+        details: 'Geen training. Wandelen, mobiliteit, stretchen als je zin hebt. Pak spullen in, speld bib op. Eet goed, drink veel, ga vroeg naar bed.',
+        why: 'Laatste dag voor de wedstrijd. Nul trainingsstress.'
+      },
+      restNormal: {
+        title: 'Rust',
+        pace: '\u2014',
+        details: 'Volledige rust. Herstel.',
+        why: 'Het lichaam past zich aan tussen sessies.'
+      },
+      shakeoutEve: {
+        title: 'Losloopje op voorabend',
+        pace: ({easy}) => `20 min op ${easy} + 4 versnellingen`,
+        details: '20 min zeer rustig loopje + 4 \u00d7 20 s versnellingen op miletempo met volledig herstel. Meer niet.',
+        why: 'Benen wakker maken. Voel de tempo\u2019s \u00e9\u00e9n keer. Dan rust.'
+      },
+      shakeoutNormal: {
+        title: 'Losloopje of rustig',
+        pace: ({easy}) => `Optioneel 25\u201330 min op ${easy}`,
+        details: 'Volledige rust is prima. Als je wilt bewegen: 25\u201330 min zeer rustig + 4 \u00d7 20 s versnellingen op vlakke ondergrond, volledig herstel tussen elk.',
+        why: 'Herstel. Versnellingen voor een neuromusculaire opfrisser zonder kosten.'
+      },
+      longTaper: {
+        title: 'Kort rustig',
+        pace: ({easy}) => easy,
+        details: 'Beperk dit tot 30\u201340 min. Volledig herstel voor wedstrijddag.',
+        why: 'Een lange loop deze week maakt je niet fitter. Wel moe.'
+      },
+      longNormal: {
+        title: 'Lange duurloop Zone 2',
+        pace: ({easy}) => easy,
+        details: ({durationMin}) => `${durationMin} min in rustig gesprektempo. Eindig met 4 \u00d7 20 s versnellingen.`,
+        why: ({isDeload}) => isDeload
+          ? 'Herstelweek \u2014 kortere duurloop, aerobe stress daalt maar ritme blijft.'
+          : 'Aerobe basis. Zonder dit stagneert al het andere.'
+      },
+      intervalsTaper: {
+        title: 'Wedstrijdtempo scherper',
+        pace: ({p400}) => `Elke 400 m in ${p400}`,
+        details: '4 \u00d7 400 m op Hyrox doeltempo, 200 m dribbel als herstel. 10 min inlopen / 5 min uitlopen. Stop terwijl je nog fris bent \u2014 geen extra\u2019s.',
+        why: 'E\u00e9n korte kwaliteitsimpuls houdt wedstrijdtempo in de benen zonder vermoeidheid op te bouwen.'
+      },
+      intervalsRaceSpec: {
+        title: 'Hyrox 400s op doeltempo',
+        pace: ({p400}) => `Elke 400 m in ${p400}`,
+        details: ({reps}) => `${reps} \u00d7 400 m op Hyrox doeltempo, 200 m dribbel als herstel. 10 min inlopen / 5 min uitlopen. Loop elke herhaling op hetzelfde tempo \u2014 niet zo snel mogelijk.`,
+        why: ({isDeload}) => isDeload
+          ? 'Herstel \u2014 minder herhalingen op hetzelfde doeltempo. Zelfde signaal, minder stress.'
+          : 'De meest overdraagbare sessie \u2014 spiegelt de wedstrijdstructuur precies.'
+      },
+      intervalsSharpen: {
+        title: 'Hyrox 1000s op doeltempo',
+        pace: ({p1k}) => `Elke 1 km op ${p1k}`,
+        details: ({reps}) => `${reps} \u00d7 1000 m op Hyrox doeltempo, 90 s staande rust. 10 min inlopen / 5 min uitlopen.`,
+        why: ({isDeload}) => isDeload
+          ? 'Herstel \u2014 minder herhalingen op doeltempo. Herstel; de simulatie komt eraan.'
+          : 'Wedstrijdlengte-herhalingen op wedstrijdtempo. Als deze houden, houdt wedstrijdtempo ook.'
+      },
+      intervalsBuild: {
+        title: 'Drempel 1000s',
+        pace: ({thr}) => `Elke 1 km op ${thr}`,
+        details: ({reps}) => `${reps} \u00d7 1000 m op drempel, 90 s staande rust tussen herhalingen. 10 min inlopen / 5 min uitlopen.`,
+        why: ({isDeload}) => isDeload
+          ? 'Herstel \u2014 zelfde drempelwerk, minder van. Absorbeer het blok.'
+          : 'Langere intervallen tillen de drempel op en oefenen tempo-discipline.'
+      },
+      intervalsBase: {
+        title: 'VO\u2082 intervallen',
+        pace: ({vo2Low, vo2High}) => `Herhalingen op ~${vo2Low}\u2013${vo2High}/km`,
+        details: ({reps}) => `${reps} \u00d7 2 min hard / 90 s rustige dribbel. 10 min inlopen / 5 min uitlopen.`,
+        why: ({isDeload}) => isDeload
+          ? 'Herstel \u2014 minder herhalingen zodat het aerobe plafond kan adapteren.'
+          : 'Blessurevriendelijke manier om het aerobe plafond vroeg in het blok op te bouwen.'
+      },
+      tempoTaper: {
+        title: 'Kort tempo',
+        pace: ({thr}) => `10 min op ${thr}`,
+        details: '10 min op drempel. 10 min inlopen / 5 min uitlopen. Niet de sessie die ik zou kiezen in wedstrijdweek \u2014 een losloopje of de wedstrijdtempo-scherper is beter.',
+        why: 'Jij hebt dit gekozen. Als je fris voelt is een kleine drempelimpuls OK.'
+      },
+      tempoBase: {
+        title: 'Drempel tempo',
+        pace: ({thr}) => `Op ${thr}`,
+        details: ({durationMin}) => `${durationMin} min aaneengesloten. 10 min inlopen / 5 min uitlopen.`,
+        why: ({isDeload}) => isDeload ? 'Herstel \u2014 korter tempo, zelfde intensiteit.' : 'Duwt de lactaatdrempel omhoog \u2014 minder overspoeld bij elk station.'
+      },
+      tempoBuild: {
+        title: 'Drempel tempo',
+        pace: ({thr}) => `Op ${thr}`,
+        details: ({sets, blockMin}) => `${sets} \u00d7 ${blockMin} min, 2 min rustige dribbel tussen. 10 min inlopen / 5 min uitlopen.`,
+        why: ({isDeload}) => isDeload ? 'Herstel \u2014 kortere blokken, zelfde drempeltempo.' : 'Duwt de lactaatdrempel omhoog \u2014 minder overspoeld bij elk station.'
+      },
+      tempoRaceSpec: {
+        title: 'Drempel tempo',
+        pace: ({thr}) => `Op ${thr}`,
+        details: ({sets, blockMin}) => `${sets} \u00d7 ${blockMin} min, 2 min rustige dribbel tussen. 10 min inlopen / 5 min uitlopen.`,
+        why: ({isDeload}) => isDeload ? 'Herstel \u2014 kortere blokken, zelfde drempeltempo.' : 'Hogere drempel = minder overspoeld bij elke Hyrox-loop.'
+      },
+      tempoSharpen: {
+        title: 'Drempel tempo',
+        pace: ({thr}) => `Op ${thr}`,
+        details: ({sets, blockMin}) => `${sets} \u00d7 ${blockMin} min, 2 min rustige dribbel tussen. 10 min inlopen / 5 min uitlopen.`,
+        why: 'Houd de drempelmotor scherp naast wedstrijdspecifiek werk.'
+      },
+      compromisedTaper: {
+        title: 'Compromised (sla dit over in wedstrijdweek)',
+        pace: ({p1k}) => `1 km op ${p1k}`,
+        details: 'Je hebt dit vastgezet in de wedstrijdweek \u2014 overweeg sterk het te vervangen door de wedstrijdtempo-scherper. Als het moet: beperk tot 2 stations + 1 \u00d7 1 km op doeltempo, dan stoppen.',
+        why: 'Volledige compromised in de taper is te veel belasting zo dicht bij de wedstrijd.'
+      },
+      compromisedRaceSpec: {
+        title: 'Compromised run',
+        pace: ({p1k}) => `1 km op ${p1k}`,
+        details: ({stations, reps1k}) => `${stations} station${stations>1?'s':''} blok${stations>1?'ken':''} (elk: 500 m roeien + 40 wall balls + 2 \u00d7 50 m sled) \u2192 direct ${reps1k} \u00d7 1 km op doeltempo.`,
+        why: ({isDeload}) => isDeload
+          ? 'Herstel \u2014 \u00e9\u00e9n licht blok. Behoud het patroon, verlaag de belasting.'
+          : 'Compromised is wat je wedstrijd bepaalt. Train wat je gaat doen.'
+      },
+      compromisedSharpen: {
+        title: 'Compromised blok of halve wedstrijdsim',
+        pace: ({p1k}) => `1 km herhalingen op ${p1k}`,
+        details: ({stations, reps1k}) => `${stations} stations + ${reps1k} \u00d7 1 km op doeltempo. Alternatief: 4 stations + 4 runs van de echte wedstrijd in volgorde op wedstrijdgewicht \u2014 een halve sim.`,
+        why: 'Generale repetitie. Dit wil je gedaan hebben voor wedstrijddag.'
+      },
+      compromisedNormal: {
+        title: 'Compromised run',
+        pace: ({p1k}) => `1 km op ${p1k}`,
+        details: 'Station blok (500 m roeien + 40 wall balls + 2 \u00d7 50 m sled) \u2192 direct 1 km op doeltempo. Herhaal \u00e9\u00e9n keer als je fris bent.',
+        why: 'Compromised is wat je wedstrijd bepaalt. Train wat je gaat doen.'
+      },
+      fallback: {
+        title: 'Rustig 30 min',
+        pace: ({easy}) => easy,
+        details: '30 min in rustig tempo. 4 versnellingen aan het eind als je fris bent.',
+        why: ''
+      }
+    }
+  }
+};
+
+let T = L.en;
+
+// ============================================================
+// UTILS
+// ============================================================
+const pad2 = n => String(n).padStart(2, '0');
+const formatPace = sec => { const m = Math.floor(sec/60), s = Math.round(sec%60); return `${m}:${pad2(s)}`; };
+const todayLocal = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); };
+const parseDate = str => { const [y,m,d] = str.split('-').map(Number); return new Date(y, m-1, d); };
+const formatDateISO = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+const formatDateShort = d => `${d.getDate()} ${T.months[d.getMonth()]}`;
+const daysBetween = (a, b) => Math.round((b - a) / 86400000);
+const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate()+n); return r; };
+const dowMon = d => (d.getDay() + 6) % 7;
+const mondayOfWeek = d => addDays(d, -dowMon(d));
+const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// ============================================================
+// STATE
+// ============================================================
+const STORAGE_KEY = 'hyroxRunner.v2';
+const OLD_STORAGE_KEY = 'hyroxRunner.v1';
+const DEFAULT_ASSIGNMENTS = ['hyrox', null, 'hyrox', null, null, 'hyrox', null];
+const DEFAULTS = {
+  raceDate: '2026-10-28',
+  currentPaceSec: 300,
+  dayAssignments: [...DEFAULT_ASSIGNMENTS],
+  heaviestDay: null,
+  language: 'en',
+};
+let state = { ...DEFAULTS, dayAssignments: [...DEFAULT_ASSIGNMENTS], settingsOpen: false, expandedDay: null };
+
+function loadState() {
+  try {
+    let raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      const old = localStorage.getItem(OLD_STORAGE_KEY);
+      if (old) {
+        const saved = JSON.parse(old);
+        const assignments = [null,null,null,null,null,null,null];
+        if (Array.isArray(saved.hyroxDays)) for (const d of saved.hyroxDays) assignments[d] = 'hyrox';
+        state.raceDate = saved.raceDate ?? DEFAULTS.raceDate;
+        state.currentPaceSec = saved.currentPaceSec ?? DEFAULTS.currentPaceSec;
+        state.dayAssignments = assignments;
+        state.heaviestDay = saved.heaviestDay ?? null;
+        state.language = saved.language ?? 'en';
+        saveState();
+        T = L[state.language] || L.en;
+        return;
+      }
+    }
+    if (raw) {
+      const saved = JSON.parse(raw);
+      state.raceDate = saved.raceDate ?? DEFAULTS.raceDate;
+      state.currentPaceSec = saved.currentPaceSec ?? DEFAULTS.currentPaceSec;
+      state.dayAssignments = Array.isArray(saved.dayAssignments) && saved.dayAssignments.length === 7
+        ? saved.dayAssignments : [...DEFAULT_ASSIGNMENTS];
+      state.heaviestDay = saved.heaviestDay ?? null;
+      state.language = saved.language ?? 'en';
+    }
+  } catch(e) { console.warn('Load failed', e); }
+  T = L[state.language] || L.en;
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      raceDate: state.raceDate, currentPaceSec: state.currentPaceSec,
+      dayAssignments: state.dayAssignments, heaviestDay: state.heaviestDay,
+      language: state.language,
+    }));
+  } catch(e) { console.warn('Save failed', e); }
+}
+
+// ============================================================
+// PHASE / WEEK / DELOAD LOGIC
+// ============================================================
+const PHASE_BOUNDS = {
+  taper:    { start: 7,  end: 1  },   // 1-7 days
+  sharpen:  { start: 21, end: 8  },   // 8-21
+  racespec: { start: 42, end: 22 },   // 22-42
+  build:    { start: 63, end: 43 },   // 43-63
+  base:     { start: null, end: 64 }  // 64+ (open-ended)
+};
+
+function getPhase(daysToRace) {
+  let key;
+  if (daysToRace < 0) key = 'past';
+  else if (daysToRace <= 7) key = 'taper';
+  else if (daysToRace <= 21) key = 'sharpen';
+  else if (daysToRace <= 42) key = 'racespec';
+  else if (daysToRace <= 63) key = 'build';
+  else key = 'base';
+  return { key, label: T.phase[key]?.label ?? key, desc: T.phase[key]?.desc ?? '' };
+}
+
+function computeZones(paceSec) {
+  return {
+    easy:      { low: paceSec + 60, high: paceSec + 90 },
+    threshold: { low: paceSec + 15, high: paceSec + 25 },
+    target:    { low: paceSec + 0,  high: paceSec + 30 },
+    vo2:       { low: paceSec - 15, high: paceSec - 5  },
+    strides:   { low: paceSec - 45, high: paceSec - 30 },
+  };
+}
+
+// Deload flag is per-CALENDAR-WEEK, anchored to Monday's daysToRace.
+// Deloads sit at weeksFromRace = 4, 8, 12, ... (every 4th week backward from race).
+// Skip when inside taper (daysToRace <= 7).
+function computeIsDeload(mondayDaysToRace) {
+  if (mondayDaysToRace <= 7) return false;
+  const weeksFromRace = Math.ceil(mondayDaysToRace / 7);
+  return weeksFromRace >= 4 && weeksFromRace % 4 === 0;
+}
+
+// Week within phase for a specific day (based on that day's daysToRace).
+function computeWeekInPhase(daysToRace, phaseKey) {
+  const b = PHASE_BOUNDS[phaseKey];
+  if (!b || b.start === null) return { week: 1, total: null }; // base = open-ended
+  const totalDays = b.start - b.end + 1;
+  const totalWeeks = Math.ceil(totalDays / 7);
+  const daysIn = b.start - daysToRace;
+  const week = Math.min(totalWeeks, Math.max(1, Math.floor(daysIn / 7) + 1));
+  return { week, total: totalWeeks };
+}
+
+// ============================================================
+// AUTO-FILL (unchanged from before — type assignment doesn't depend on deload/week)
+// ============================================================
+const HARD_TYPES = ['intervals','tempo','compromised'];
+const circularDist = (a, b) => { const d = Math.abs(a-b); return Math.min(d, 7-d); };
+
+function scorePlacement(placement, hyroxDays, heaviestDay) {
+  let score = 0;
+  const entries = Object.entries(placement);
+  const hardDays = entries.filter(([,t]) => HARD_TYPES.includes(t)).map(([d]) => parseInt(d,10));
+  for (const [dStr, type] of entries) {
+    const d = parseInt(dStr,10);
+    const isHard = HARD_TYPES.includes(type);
+    if (isHard) {
+      for (const hd of hardDays) {
+        if (hd === d) continue;
+        const dist = circularDist(d, hd);
+        if (dist === 0) score -= 1000;
+        else if (dist === 1) score -= 50;
+        else if (dist >= 3) score += 2;
+      }
+    }
+    for (const hd of hyroxDays) {
+      const dist = circularDist(d, hd);
+      if (dist === 1) {
+        const isDayAfter = (hd + 1) % 7 === d;
+        if (isDayAfter && heaviestDay !== null && heaviestDay === hd) score -= 15;
+        else if (isHard) score -= 3;
+        else score -= 0.5;
+      }
+    }
+    if (type === 'intervals') score -= d * 0.3;
+    else if (type === 'long' || type === 'compromised') score += d * 0.4;
+  }
+  return score;
+}
+
+function* permutations(arr, k) {
+  if (k === 0) { yield []; return; }
+  for (let i = 0; i < arr.length; i++) {
+    const rest = arr.slice(0,i).concat(arr.slice(i+1));
+    for (const p of permutations(rest, k-1)) yield [arr[i], ...p];
+  }
+}
+
+function autoFillNormal(pinned, phase, heaviestDay) {
+  const result = [...pinned];
+  const autoIdx = [], hyroxDays = [], pinnedAssignments = {};
+  const pinnedTypes = new Set();
+  for (let d = 0; d < 7; d++) {
+    if (result[d] === null) autoIdx.push(d);
+    else {
+      pinnedTypes.add(result[d]);
+      pinnedAssignments[d] = result[d];
+      if (result[d] === 'hyrox') hyroxDays.push(d);
+    }
+  }
+  if (autoIdx.length === 0) return result;
+  const isRaceSpec = ['racespec','sharpen'].includes(phase.key);
+  const longType = isRaceSpec ? 'compromised' : 'long';
+  const pinnedLongish = pinnedTypes.has('long') || pinnedTypes.has('compromised');
+  const pinnedQCount = HARD_TYPES.filter(t => pinnedTypes.has(t)).length + (pinnedLongish ? 1 : 0);
+  const totalPossible = autoIdx.length + pinnedQCount;
+  let desired;
+  if (totalPossible === 0) desired = [];
+  else if (totalPossible === 1) desired = [isRaceSpec ? 'intervals' : 'tempo'];
+  else if (totalPossible === 2) desired = ['intervals', longType];
+  else desired = ['intervals', 'tempo', longType];
+  const needed = [];
+  for (const t of desired) {
+    if (pinnedTypes.has(t)) continue;
+    if ((t === 'long' || t === 'compromised') && pinnedLongish) continue;
+    needed.push(t);
+  }
+  const toPlace = needed.slice(0, autoIdx.length);
+  let bestScore = -Infinity, bestPlacement = {};
+  if (toPlace.length > 0) {
+    for (const dayCombo of permutations(autoIdx, toPlace.length)) {
+      const placement = { ...pinnedAssignments };
+      for (let i = 0; i < toPlace.length; i++) placement[dayCombo[i]] = toPlace[i];
+      const s = scorePlacement(placement, hyroxDays, heaviestDay);
+      if (s > bestScore) {
+        bestScore = s; bestPlacement = {};
+        for (let i = 0; i < toPlace.length; i++) bestPlacement[dayCombo[i]] = toPlace[i];
+      }
+    }
+  }
+  for (const [dStr, type] of Object.entries(bestPlacement)) result[parseInt(dStr,10)] = type;
+  for (const d of autoIdx) if (result[d] === null) result[d] = 'shakeout';
+  return result;
+}
+
+function autoFillTaper(pinned, todayDate, raceDate) {
+  const result = [...pinned];
+  const monday = mondayOfWeek(todayDate);
+  for (let d = 0; d < 7; d++) {
+    if (result[d] !== null) continue;
+    const dayDate = addDays(monday, d);
+    const dtr = daysBetween(dayDate, raceDate);
+    if (dtr < 0) result[d] = 'shakeout';
+    else if (dtr === 0) result[d] = 'race';
+    else if (dtr === 1) result[d] = 'rest';
+    else if (dtr === 2) result[d] = 'shakeout';
+    else if (dtr === 3) result[d] = 'intervals';
+    else result[d] = 'shakeout';
+  }
+  return result;
+}
+
+function fillWeek(pinned, phase, heaviestDay, todayDate, raceDate) {
+  if (phase.key === 'taper') return autoFillTaper(pinned, todayDate, raceDate);
+  return autoFillNormal(pinned, phase, heaviestDay);
+}
+
+// ============================================================
+// SESSION CONTENT
+// ============================================================
+const pRange = z => `${formatPace(z.low)}\u2013${formatPace(z.high)}/km`;
+const per400 = z => `${formatPace(z.low * 0.4)}\u2013${formatPace(z.high * 0.4)}`;
+const per1k  = z => `${formatPace(z.low)}\u2013${formatPace(z.high)}`;
+
+// Round to nearest, minimum 1
+const dloadInt = (n, mult, min = 1) => Math.max(min, Math.round(n * mult));
+const dloadDur = (n, mult, step = 5) => Math.max(step, Math.round((n * mult) / step) * step);
+
+// Given a type and phase-context, build the args object the translation functions consume.
+function buildArgs(type, phase, zones, ctx) {
+  const isDeload = !!ctx.isDeload;
+  const mult = isDeload ? 0.6 : 1;
+  const week = ctx.weekInPhase || 1;
+
+  const args = {
+    isDeload,
+    easy: pRange(zones.easy),
+    thr: pRange(zones.threshold),
+    p400: per400(zones.target),
+    p1k: per1k(zones.target),
+    vo2Low: formatPace(zones.vo2.low),
+    vo2High: formatPace(zones.vo2.high),
+    dtr: ctx.daysToRaceForDay,
+  };
+
+  if (type === 'intervals') {
+    if (phase.key === 'racespec') args.reps = dloadInt(5 + week, mult);              // wk1:6 wk2:7 wk3:8
+    else if (phase.key === 'sharpen') args.reps = dloadInt(3 + week, mult);          // wk1:4 wk2:5
+    else if (phase.key === 'build') args.reps = dloadInt(Math.min(6, 3 + week), mult); // wk1:4 wk2:5 wk3:6
+    else if (phase.key === 'base') args.reps = dloadInt(Math.min(8, 4 + week), mult, 4); // 5,6,7,8 cap
+    else args.reps = 4;
+  }
+  if (type === 'tempo') {
+    if (phase.key === 'racespec') { args.sets = 3; args.blockMin = dloadInt(6 + 2*week, mult, 4); }  // 8,10,12
+    else if (phase.key === 'sharpen') { args.sets = isDeload ? 2 : 3; args.blockMin = 8; }
+    else if (phase.key === 'build') { args.sets = 3; args.blockMin = dloadInt(Math.min(10, 6 + 2*week), mult, 4); } // 8,10,10
+    else if (phase.key === 'base') args.durationMin = dloadDur(Math.min(30, 15 + 5*week), mult); // 20,25,30
+    else args.durationMin = 10;
+  }
+  if (type === 'long') {
+    if (phase.key === 'racespec') args.durationMin = dloadDur(45 + 5*week, mult);   // 50,55,60
+    else if (phase.key === 'sharpen') args.durationMin = dloadDur(50 + 5*week, mult); // 55,60
+    else if (phase.key === 'build') args.durationMin = dloadDur(50 + 5*week, mult);   // 55,60,65
+    else if (phase.key === 'base') args.durationMin = dloadDur(Math.min(60, 40 + 5*week), mult, 5); // 45..60
+    else args.durationMin = 35;
+  }
+  if (type === 'compromised') {
+    if (phase.key === 'racespec') {
+      // wk1: 1 station + 1 rep; wk2: 1 + 2; wk3: 2 + 2
+      const stationsBase = week >= 3 ? 2 : 1;
+      const repsBase = Math.min(2, week);
+      args.stations = isDeload ? 1 : stationsBase;
+      args.reps1k = isDeload ? 1 : repsBase;
+    } else if (phase.key === 'sharpen') {
+      // wk1: 3 stations + 3 reps; wk2: 4 + 4 (half sim)
+      args.stations = isDeload ? 2 : (week === 1 ? 3 : 4);
+      args.reps1k = isDeload ? 2 : (week === 1 ? 3 : 4);
+    } else {
+      args.stations = 1;
+      args.reps1k = 1;
+    }
+  }
+  return args;
+}
+
+function wrap(variant, color, args = {}) {
+  const resolve = v => (typeof v === 'function' ? v(args) : v);
+  return {
+    color,
+    title: resolve(variant.title),
+    pace: resolve(variant.pace),
+    details: resolve(variant.details),
+    why: resolve(variant.why),
+  };
+}
+
+function getSessionByType(type, phase, zones, ctx = {}) {
+  const S = T.session;
+  const args = buildArgs(type, phase, zones, ctx);
+  const isTaper = phase.key === 'taper';
+
+  if (type === 'race' || ctx.isRaceDay) return wrap(S.race, 'race', args);
+
+  if (type === 'hyrox') {
+    if (isTaper) return wrap(S.hyroxTaper, 'hyrox', args);
+    return wrap(S.hyroxNormal, 'hyrox', args);
+  }
+  if (type === 'rest') {
+    if (isTaper && ctx.daysToRaceForDay === 1) return wrap(S.restEve, 'shakeout', args);
+    return wrap(S.restNormal, 'shakeout', args);
+  }
+  if (type === 'shakeout') {
+    if (isTaper && ctx.daysToRaceForDay === 2) return wrap(S.shakeoutEve, 'shakeout', args);
+    return wrap(S.shakeoutNormal, 'shakeout', args);
+  }
+  if (type === 'long') {
+    if (isTaper) return wrap(S.longTaper, 'long', args);
+    return wrap(S.longNormal, 'long', args);
+  }
+  if (type === 'intervals') {
+    if (isTaper) return wrap(S.intervalsTaper, 'intervals', args);
+    if (phase.key === 'sharpen') return wrap(S.intervalsSharpen, 'intervals', args);
+    if (phase.key === 'racespec') return wrap(S.intervalsRaceSpec, 'intervals', args);
+    if (phase.key === 'build') return wrap(S.intervalsBuild, 'intervals', args);
+    return wrap(S.intervalsBase, 'intervals', args);
+  }
+  if (type === 'tempo') {
+    if (isTaper) return wrap(S.tempoTaper, 'tempo', args);
+    if (phase.key === 'sharpen') return wrap(S.tempoSharpen, 'tempo', args);
+    if (phase.key === 'racespec') return wrap(S.tempoRaceSpec, 'tempo', args);
+    if (phase.key === 'build') return wrap(S.tempoBuild, 'tempo', args);
+    return wrap(S.tempoBase, 'tempo', args);
+  }
+  if (type === 'compromised') {
+    if (isTaper) return wrap(S.compromisedTaper, 'compromised', args);
+    if (phase.key === 'sharpen') return wrap(S.compromisedSharpen, 'compromised', args);
+    if (phase.key === 'racespec') return wrap(S.compromisedRaceSpec, 'compromised', args);
+    return wrap(S.compromisedNormal, 'compromised', args);
+  }
+  return wrap(S.fallback, 'shakeout', args);
+}
+
+function buildWeek() {
+  const today = todayLocal();
+  const raceDate = parseDate(state.raceDate);
+  const daysToRace = daysBetween(today, raceDate);
+  const phase = getPhase(daysToRace);
+  const zones = computeZones(state.currentPaceSec);
+  const monday = mondayOfWeek(today);
+
+  // Deload is a whole-calendar-week flag (anchored to Monday's daysToRace).
+  const mondayDtr = daysBetween(monday, raceDate);
+  const isDeloadWeek = computeIsDeload(mondayDtr);
+
+  // Today's week-in-phase for the header display.
+  const todayWeekCtx = computeWeekInPhase(daysToRace, phase.key);
+
+  const filled = fillWeek(state.dayAssignments, phase, state.heaviestDay, today, raceDate);
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const date = addDays(monday, i);
+    const dtrForDay = daysBetween(date, raceDate);
+    const isToday = daysBetween(today, date) === 0;
+    const isRaceDay = dtrForDay === 0;
+    const dayPhase = getPhase(dtrForDay);
+    const dayWeekCtx = computeWeekInPhase(dtrForDay, dayPhase.key);
+    const type = filled[i];
+    const pinnedType = state.dayAssignments[i];
+    const session = getSessionByType(type, dayPhase, zones, {
+      daysToRaceForDay: dtrForDay,
+      isRaceDay,
+      isDeload: isDeloadWeek && !isRaceDay && dayPhase.key !== 'taper',
+      weekInPhase: dayWeekCtx.week,
+    });
+    days.push({
+      dayIndex: i, date, isToday, isRaceDay,
+      effectiveType: type, pinnedType, session,
+      isDeload: isDeloadWeek && !isRaceDay && dayPhase.key !== 'taper',
+    });
+  }
+  return { today, raceDate, daysToRace, phase, zones, days, isDeloadWeek, todayWeekCtx };
+}
+
+// ============================================================
+// TEMPLATES
+// ============================================================
+const iconGear = () => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 10v6m8.66-15.66-4.24 4.24m-8.84 8.84L3.34 20.66M23 12h-6m-10 0H1m20.66 8.66-4.24-4.24m-8.84-8.84L3.34 3.34"/></svg>`;
+const iconClose = () => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
+
+function template() {
+  const w = buildWeek();
+  const todayObj = w.days.find(d => d.isToday);
+  const expandedIdx = state.expandedDay === null ? (todayObj ? todayObj.dayIndex : -1) : state.expandedDay;
+
+  // Progress line
+  let progressLine = '';
+  if (w.todayWeekCtx.total && w.phase.key !== 'past' && w.phase.key !== 'taper') {
+    progressLine = `<div class="phase-progress"><span>${escapeHtml(T.weekOf(w.todayWeekCtx.week, w.todayWeekCtx.total))}</span>${w.isDeloadWeek ? `<span class="deload-badge">${escapeHtml(T.deloadBadge)}</span>` : ''}</div>`;
+  } else if (w.isDeloadWeek && w.phase.key !== 'past' && w.phase.key !== 'taper') {
+    progressLine = `<div class="phase-progress"><span class="deload-badge">${escapeHtml(T.deloadBadge)}</span></div>`;
+  }
+
+  return `
+    <div class="app">
+      <header class="header">
+        <div class="wordmark">Hyrox Runner</div>
+        <button class="settings-btn" data-action="open-settings" aria-label="${escapeHtml(T.settings)}">${iconGear()}</button>
+      </header>
+      <section class="phase-hero">
+        <div class="phase-eyebrow">${formatDateShort(w.today)} \u00b7 ${T.days.full[dowMon(w.today)]}</div>
+        <h1 class="phase-label">${escapeHtml(w.phase.label)}</h1>
+        ${progressLine}
+        <div class="phase-meta">
+          ${w.daysToRace < 0
+            ? `<span class="num">${escapeHtml(T.racePassed)}</span>`
+            : w.daysToRace === 0
+              ? `<span class="num">${escapeHtml(T.raceToday)}</span>`
+              : `<span class="num">${escapeHtml(T.daysToRace(w.daysToRace))}</span> \u00b7 <span class="num">${formatDateShort(w.raceDate)}</span>`
+          }
+        </div>
+        <p class="phase-desc">${escapeHtml(w.phase.desc)}</p>
+        ${w.isDeloadWeek && w.phase.key !== 'taper' ? `<p class="phase-desc" style="color:var(--long);margin-top:8px;">${escapeHtml(T.deloadNote)}</p>` : ''}
+      </section>
+      ${w.phase.key === 'taper' && w.daysToRace > 0 ? raceWeekBanner(w) : ''}
+      ${todayObj ? todaySection(todayObj) : ''}
+      <section class="week">
+        <div class="section-title">${escapeHtml(T.thisWeek)}</div>
+        <div class="section-hint">${escapeHtml(T.thisWeekHint)}</div>
+        <div class="week-list">
+          ${w.days.map(d => dayRow(d, expandedIdx)).join('')}
+        </div>
+      </section>
+      <section class="pace-zones">
+        <div class="section-title">${escapeHtml(T.paceZones)} \u00b7 ${escapeHtml(T.paceZonesSub(formatPace(state.currentPaceSec)))}</div>
+        <div class="pace-zone-list">
+          ${paceZoneRow(T.zones.easy, w.zones.easy, 'long')}
+          ${paceZoneRow(T.zones.threshold, w.zones.threshold, 'tempo')}
+          ${paceZoneRow(T.zones.target, w.zones.target, 'compromised')}
+          ${paceZoneRow(T.zones.vo2, w.zones.vo2, 'intervals')}
+          ${paceZoneRow(T.zones.strides, w.zones.strides, 'race')}
+        </div>
+      </section>
+      <footer class="footer">
+        ${escapeHtml(T.footerLine1)}<br>
+        ${escapeHtml(T.footerLine2)}
+      </footer>
+    </div>
+    ${state.settingsOpen ? settingsDrawer() : ''}
+  `;
+}
+
+function raceWeekBanner(w) {
+  return `
+    <div class="race-week-banner">
+      <div class="label">${escapeHtml(T.raceWeekTitle)}</div>
+      <div class="title">${escapeHtml(T.daysToGo(w.daysToRace))}</div>
+      <div class="desc">${escapeHtml(T.raceWeekDesc)}</div>
+    </div>
+  `;
+}
+
+function todaySection(d) {
+  const s = d.session;
+  const glowVar = `--accent-glow: var(--${s.color});`;
+  return `
+    <section class="today" style="${glowVar}">
+      <div class="today-eyebrow">
+        <span>${escapeHtml(T.todayLabel)} \u00b7 ${formatDateShort(d.date)}</span>
+        ${d.isRaceDay ? `<span style="color:var(--race);">\u25cf ${escapeHtml(T.raceDayLabel)}</span>` : ''}
+        ${d.pinnedType && !d.isRaceDay ? `<span style="color:var(--text-dim);">\u25cf ${escapeHtml(T.pinnedLabel)}</span>` : ''}
+        ${d.isDeload ? `<span class="deload-badge">${escapeHtml(T.deloadBadge)}</span>` : ''}
+      </div>
+      <h2 class="today-title">
+        <span class="dot" style="background: var(--${s.color}); color: var(--${s.color});"></span>
+        ${escapeHtml(s.title)}
+      </h2>
+      ${s.pace !== '\u2014' ? `<div class="today-pace">${escapeHtml(s.pace)}</div>` : ''}
+      <div class="today-details">${escapeHtml(s.details)}</div>
+      ${s.why ? `<div class="today-why">${escapeHtml(s.why)}</div>` : ''}
+    </section>
+  `;
+}
+
+function dayRow(d, expandedIdx) {
+  const s = d.session;
+  const isExpanded = d.dayIndex === expandedIdx;
+  const classes = ['day-row'];
+  if (d.isToday) classes.push('is-today');
+  if (d.isRaceDay) classes.push('is-race');
+  if (isExpanded) classes.push('is-expanded');
+  if (d.isDeload) classes.push('is-deload');
+  return `
+    <div class="${classes.join(' ')}">
+      <div class="day-row-header" data-action="expand-day" data-day="${d.dayIndex}">
+        <div class="day-row-label">
+          <span>${T.days.short[d.dayIndex]} ${d.date.getDate()}</span>
+          ${d.pinnedType && !d.isRaceDay ? `<span class="pin-dot" title="${escapeHtml(T.pinnedLabel)}"></span>` : ''}
+        </div>
+        <div class="day-row-title">
+          <span class="dot" style="background: var(--${s.color});"></span>
+          <span>${escapeHtml(s.title)}</span>
+        </div>
+        <div class="day-row-caret">\u203a</div>
+      </div>
+      ${isExpanded ? `
+        <div class="day-row-expanded">
+          ${!d.isRaceDay ? typePicker(d.dayIndex, d.pinnedType) : ''}
+          ${s.pace !== '\u2014' ? `<div class="pace-line">${escapeHtml(s.pace)}</div>` : ''}
+          <div>${escapeHtml(s.details)}</div>
+          ${s.why ? `<div class="why">${escapeHtml(s.why)}</div>` : ''}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+const TYPE_KEYS = ['','hyrox','intervals','tempo','long','compromised','shakeout','rest'];
+function typePicker(dayIdx, pinnedType) {
+  const current = pinnedType || '';
+  return `
+    <div class="type-picker-label">${escapeHtml(T.sessionType)}</div>
+    <div class="type-picker">
+      ${TYPE_KEYS.map(key => {
+        const label = key === '' ? T.types.auto : T.types[key];
+        return `<button class="type-chip ${key === '' ? 'type-auto' : ''} ${current === key ? 'active' : ''}"
+                  data-action="set-type" data-day="${dayIdx}" data-type="${key}">${escapeHtml(label)}</button>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function paceZoneRow(label, zone, colorKey) {
+  return `
+    <div class="pace-zone-row">
+      <div class="label"><span class="dot" style="background: var(--${colorKey});"></span>${escapeHtml(label)}</div>
+      <div class="value">${formatPace(zone.low)}\u2013${formatPace(zone.high)}/km</div>
+      <div class="per400">${formatPace(zone.low * 0.4)}\u2013${formatPace(zone.high * 0.4)}/400m</div>
+    </div>
+  `;
+}
+
+function settingsDrawer() {
+  const paceMin = Math.floor(state.currentPaceSec / 60);
+  const paceSec = state.currentPaceSec % 60;
+  const hyroxDayIdxs = state.dayAssignments.map((v,i) => v === 'hyrox' ? i : -1).filter(i => i !== -1);
+  const heaviestOptions = hyroxDayIdxs.map(i =>
+    `<option value="${i}" ${state.heaviestDay===i?'selected':''}>${escapeHtml(T.days.full[i])}</option>`
+  ).join('');
+  const heaviestDisabled = hyroxDayIdxs.length === 0;
+
+  return `
+    <div class="drawer-backdrop" data-action="close-settings"></div>
+    <div class="drawer" role="dialog" aria-label="${escapeHtml(T.settings)}">
+      <div class="drawer-handle"></div>
+      <div class="drawer-title">
+        ${escapeHtml(T.settings)}
+        <button class="drawer-close" data-action="close-settings" aria-label="${escapeHtml(T.close)}">${iconClose()}</button>
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label">${escapeHtml(T.language)}</label>
+        <div class="lang-switch">
+          <button class="lang-btn ${state.language==='en'?'active':''}" data-action="set-lang" data-lang="en">English</button>
+          <button class="lang-btn ${state.language==='nl'?'active':''}" data-action="set-lang" data-lang="nl">Nederlands</button>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label" for="race-date-input">${escapeHtml(T.raceDate)}</label>
+        <input type="date" class="date-input" id="race-date-input" value="${state.raceDate}">
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label">${escapeHtml(T.currentPace)}</label>
+        <div class="pace-input-group">
+          <input type="number" class="pace-input" id="pace-min-input" min="2" max="10" step="1" value="${paceMin}" inputmode="numeric">
+          <span class="pace-sep">:</span>
+          <input type="number" class="pace-input" id="pace-sec-input" min="0" max="59" step="1" value="${pad2(paceSec)}" inputmode="numeric">
+          <span class="pace-unit">${escapeHtml(T.paceUnit)}</span>
+        </div>
+        <div class="setting-hint">${escapeHtml(T.paceHint)}</div>
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label">${escapeHtml(T.hyroxDays)}</label>
+        <div class="day-picker">
+          ${T.days.two.map((d, i) => `
+            <button class="day-picker-btn ${state.dayAssignments[i] === 'hyrox' ? 'active' : ''}" data-action="toggle-hyrox" data-day="${i}" aria-pressed="${state.dayAssignments[i] === 'hyrox'}">${d}</button>
+          `).join('')}
+        </div>
+        <div class="setting-hint">${escapeHtml(T.hyroxDaysHint)}</div>
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label" for="heaviest-day-select">${escapeHtml(T.heaviestDay)}</label>
+        <select class="select-input" id="heaviest-day-select" ${heaviestDisabled?'disabled':''}>
+          <option value="">${escapeHtml(T.variesWeekly)}</option>
+          ${heaviestOptions}
+        </select>
+        <div class="setting-hint">${escapeHtml(T.heaviestDayHint)}</div>
+      </div>
+
+      <div class="setting-group" style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border);margin-top:24px;">
+        <div class="setting-hint" style="margin:0;">${escapeHtml(T.savedInBrowser)}</div>
+        <button class="reset-btn" data-action="reset-settings">${escapeHtml(T.resetWeek)}</button>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// EVENT HANDLERS
+// ============================================================
+const root = document.getElementById('root');
+
+function render() {
+  const scrollY = window.scrollY;
+  root.innerHTML = template();
+  window.scrollTo({ top: scrollY });
+}
+
+function handleClick(e) {
+  const target = e.target.closest('[data-action]');
+  if (!target) return;
+  const action = target.dataset.action;
+  if (action === 'open-settings') { state.settingsOpen = true; render(); }
+  else if (action === 'close-settings') { state.settingsOpen = false; render(); }
+  else if (action === 'expand-day') {
+    const day = parseInt(target.dataset.day, 10);
+    state.expandedDay = state.expandedDay === day ? -1 : day;
+    render();
+  } else if (action === 'set-type') {
+    const day = parseInt(target.dataset.day, 10);
+    const type = target.dataset.type;
+    state.dayAssignments[day] = type === '' ? null : type;
+    if (state.heaviestDay === day && state.dayAssignments[day] !== 'hyrox') state.heaviestDay = null;
+    saveState(); render();
+  } else if (action === 'toggle-hyrox') {
+    const day = parseInt(target.dataset.day, 10);
+    if (state.dayAssignments[day] === 'hyrox') {
+      state.dayAssignments[day] = null;
+      if (state.heaviestDay === day) state.heaviestDay = null;
+    } else state.dayAssignments[day] = 'hyrox';
+    saveState(); render();
+  } else if (action === 'reset-settings') {
+    state.dayAssignments = [...DEFAULT_ASSIGNMENTS];
+    state.heaviestDay = null;
+    saveState(); render();
+  } else if (action === 'set-lang') {
+    const lang = target.dataset.lang;
+    if (L[lang]) {
+      state.language = lang;
+      T = L[lang];
+      document.documentElement.lang = lang;
+      saveState(); render();
+    }
+  }
+}
+
+function handleChange(e) {
+  const id = e.target.id;
+  if (id === 'race-date-input') {
+    if (e.target.value) { state.raceDate = e.target.value; saveState(); render(); }
+  } else if (id === 'pace-min-input' || id === 'pace-sec-input') {
+    const minEl = document.getElementById('pace-min-input');
+    const secEl = document.getElementById('pace-sec-input');
+    if (!minEl || !secEl) return;
+    const min = Math.max(2, Math.min(10, parseInt(minEl.value,10) || 5));
+    const sec = Math.max(0, Math.min(59, parseInt(secEl.value,10) || 0));
+    state.currentPaceSec = min * 60 + sec;
+    saveState(); render();
+  } else if (id === 'heaviest-day-select') {
+    const v = e.target.value;
+    state.heaviestDay = v === '' ? null : parseInt(v,10);
+    saveState(); render();
+  }
+}
+
+document.addEventListener('click', handleClick);
+document.addEventListener('change', handleChange);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && state.settingsOpen) { state.settingsOpen = false; render(); }
+});
+
+loadState();
+document.documentElement.lang = state.language;
+render();
+</script>
+</body>
+</html>
