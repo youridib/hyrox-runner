@@ -54,6 +54,57 @@ describe('first render', () => {
   });
 });
 
+describe('today tab is read-only', () => {
+  it('shows practical tips for the session', () => {
+    render(<App />);
+    const tips = document.querySelector('.tips-card');
+    expect(tips).toBeTruthy();
+    const items = tips!.querySelectorAll('.tips-list li');
+    expect(items.length).toBeGreaterThanOrEqual(3);
+    for (const item of Array.from(items)) {
+      expect((item.textContent ?? '').length).toBeGreaterThan(20);
+    }
+  });
+
+  it('offers no logging or editing controls', () => {
+    render(<App />);
+    expect(document.querySelector('.done-btn')).toBeNull();
+    expect(document.querySelector('.rpe-chip')).toBeNull();
+    expect(document.querySelector('.note-input')).toBeNull();
+    expect(document.querySelector('.type-picker')).toBeNull();
+    expect(document.querySelector('.scope-picker')).toBeNull();
+  });
+
+  it('keeps logging and editing available on the week tab', () => {
+    render(<App />);
+    fireEvent.click(document.querySelectorAll('.tab')[1]!);
+    fireEvent.click(document.querySelectorAll('.day-row-header')[1]!);
+    expect(document.querySelector('.type-picker')).toBeTruthy();
+  });
+
+  it('shows tips in Dutch after switching language', () => {
+    reset({ language: 'nl' });
+    render(<App />);
+    const tips = document.querySelector('.tips-card');
+    expect(tips).toBeTruthy();
+    expect(tips!.textContent).toContain('Hoe uitvoeren');
+  });
+
+  it('flags a deload week in the tips', () => {
+    // This week's Monday exactly 28 days out puts today in a deload week.
+    reset({ raceDate: addDays(mondayOf(TODAY), 28) });
+    render(<App />);
+    expect(document.querySelector('.deload-badge')).toBeTruthy();
+    expect(document.querySelector('.tips-card .tips-deload')).toBeTruthy();
+  });
+
+  it('shows no deload note in a normal week', () => {
+    reset({ raceDate: addDays(mondayOf(TODAY), 35) });
+    render(<App />);
+    expect(document.querySelector('.tips-card .tips-deload')).toBeNull();
+  });
+});
+
 describe('tabs', () => {
   it('switches between today, week and block', () => {
     render(<App />);

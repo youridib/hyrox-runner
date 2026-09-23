@@ -125,4 +125,6 @@ export interface Dict {
   errorReset: string;
   today: string;
   cancel: string;
+  tipsTitle: string;
+  deloadTip: string;
 }

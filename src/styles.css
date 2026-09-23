@@ -440,7 +440,8 @@ button { font-family: inherit; }
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.55);
-  z-index: 10;
+  /* Above the sticky tab bar, which would otherwise sit on top of the drawer. */
+  z-index: 100;
   animation: fadeIn 0.15s ease-out;
 }
 .drawer {
@@ -451,7 +452,7 @@ button { font-family: inherit; }
   background: var(--bg);
   border-top: 1px solid var(--border);
   border-radius: 20px 20px 0 0;
-  z-index: 11;
+  z-index: 101;
   padding: 16px 20px calc(24px + env(safe-area-inset-bottom, 0px));
   max-height: 88vh;
   overflow-y: auto;
@@ -928,3 +929,37 @@ button { font-family: inherit; }
   padding-top: 0;
   border-top: none;
 }
+
+/* Today tab: practical execution notes under the session card. */
+.tips-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 32px;
+}
+.tips-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tips-list li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+.tips-list li + li { margin-top: 11px; }
+.tips-list li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 9px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-dim);
+}
+.tips-list li.tips-deload { color: var(--long); }
+.tips-list li.tips-deload::before { background: var(--long); }

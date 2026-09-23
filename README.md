@@ -8,7 +8,7 @@ screen, works fully offline.
 ```bash
 npm install
 npm run dev        # local dev server
-npm test           # 220 tests
+npm test           # 231 tests
 npm run build      # typecheck + production build into dist/
 npm run preview    # serve the built site
 ```
@@ -66,6 +66,14 @@ value reverse-engineered from how far away the race happens to be.
   compromising the spacing.
 - Race week is fixed: rest the day before, shakeout two days out, one short
   sharpener three days out.
+
+### The three tabs
+
+- **Today** is read-only: the session, and practical notes on how to execute it
+  well. Nothing to tap, so it works as a glance before you train.
+- **Week** is where you change or log a session, with the whole week in view to
+  change it against.
+- **Block** is every week from the block start to race day.
 
 ### Two kinds of change
 

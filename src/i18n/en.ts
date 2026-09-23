@@ -56,7 +56,7 @@ export const en: Dict = {
   paceHint: 'Your best 1 km time when rested. All paces are derived from this.',
   hyroxDays: 'Hyrox training days',
   hyroxDaysHint: 'Bulk toggle. Fine-grained control (compromised on Tue, rest on Thu, etc.) is on each day in the week view.',
-  heaviestDay: 'Heaviest Hyrox day (this week)',
+  heaviestDay: 'Heaviest Hyrox day',
   heaviestDayHint: 'If set, intervals move to a day that isn\u2019t right after this one.',
   variesWeekly: 'Varies week to week',
   resetWeek: 'Reset week',
@@ -265,4 +265,6 @@ export const en: Dict = {
   errorReset: 'Reset to defaults',
   today: 'Today',
   cancel: 'Cancel',
+  tipsTitle: 'How to run it',
+  deloadTip: 'Deload week — hold the intensity, cut the volume. Resist adding extra.',
 };

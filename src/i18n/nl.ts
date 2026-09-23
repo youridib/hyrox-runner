@@ -56,8 +56,8 @@ export const nl: Dict = {
   paceHint: 'Jouw beste 1 km tijd uitgerust. Alle tempo\u2019s worden hiervan afgeleid.',
   hyroxDays: 'Hyrox trainingsdagen',
   hyroxDaysHint: 'Snelle instelling. Fijnere aanpassingen (compromised op di, rust op do, enz.) per dag in de weekweergave.',
-  heaviestDay: 'Zwaarste Hyrox dag (deze week)',
-  heaviestDayHint: 'Indien ingesteld, worden intervallen verplaatst naar een dag die niet direct erna valt.',
+  heaviestDay: 'Zwaarste Hyrox dag',
+  heaviestDayHint: 'Geldt elke week. Indien ingesteld, worden zware lopen weggehaald bij de dag erna.',
   variesWeekly: 'Wisselt per week',
   resetWeek: 'Reset week',
   savedInBrowser: 'Alleen opgeslagen in deze browser.',
@@ -264,4 +264,6 @@ export const nl: Dict = {
   errorReset: 'Terug naar standaardinstellingen',
   today: 'Vandaag',
   cancel: 'Annuleren',
+  tipsTitle: 'Hoe uitvoeren',
+  deloadTip: 'Herstelweek — houd de intensiteit, schrap het volume. Niet stiekem extra doen.',
 };

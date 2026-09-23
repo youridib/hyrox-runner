@@ -8,9 +8,10 @@ import { store } from '../state/store';
 import type { LogEntry } from '../state/schema';
 import { useAppState, useDict, usePlan, useToast, useToday } from './hooks';
 import { computeStats } from './stats';
-import { BlockWeekCard, DayRow, IconGear, LogPanel, TodayCard, TypePicker, shortDate } from './components';
+import { BlockWeekCard, DayRow, IconGear, TodayCard, shortDate } from './components';
 import { SettingsDrawer } from './SettingsDrawer';
 import type { Dict } from '../i18n';
+import { getTips } from '../i18n/tips';
 
 type Tab = 'today' | 'week' | 'block';
 
@@ -122,25 +123,7 @@ export function App(): JSX.Element {
             {todayDay && (
               <>
                 <TodayCard day={todayDay} dict={dict} />
-                {todayDay.effectiveType !== 'rest' && (
-                  <section class="today-actions">
-                    <LogPanel
-                      date={todayDay.date}
-                      entry={state.log[todayDay.date]}
-                      dict={dict}
-                      onChange={(entry) => setLog(todayDay.date, entry)}
-                    />
-                  </section>
-                )}
-                {!todayDay.isRaceDay && (
-                  <section class="today-actions">
-                    <TypePicker
-                      day={todayDay}
-                      dict={dict}
-                      onPick={(type, scope) => pick(todayDay, type, scope)}
-                    />
-                  </section>
-                )}
+                <TipsCard day={todayDay} dict={dict} language={state.language} />
               </>
             )}
             <StatsStrip stats={stats} dict={dict} />
@@ -231,6 +214,38 @@ function PhaseHero({ plan, dict }: { plan: ReturnType<typeof usePlan>; dict: Dic
       {showDeload && (
         <p class="phase-desc" style="color:var(--long);margin-top:8px;">{dict.deloadNote}</p>
       )}
+    </section>
+  );
+}
+
+/**
+ * Practical notes for today's session.
+ *
+ * The Today tab is read-only on purpose: it answers "what am I doing and how
+ * do I do it well". Changing or logging a session lives in the Week and Block
+ * tabs, where the whole week is in view to change it against.
+ */
+function TipsCard({
+  day,
+  dict,
+  language,
+}: {
+  day: PlannedDay;
+  dict: Dict;
+  language: string;
+}): JSX.Element | null {
+  const tips = getTips(language, day.effectiveType);
+  if (tips.length === 0) return null;
+
+  return (
+    <section class="tips-card">
+      <div class="log-label">{dict.tipsTitle}</div>
+      <ul class="tips-list">
+        {day.isDeload && <li class="tips-deload">{dict.deloadTip}</li>}
+        {tips.map((tip) => (
+          <li key={tip}>{tip}</li>
+        ))}
+      </ul>
     </section>
   );
 }
