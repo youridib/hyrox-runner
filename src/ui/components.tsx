@@ -1,6 +1,7 @@
 import type { JSX } from 'preact';
 import { useState } from 'preact/hooks';
 import { dayOfMonth, monthIndex } from '../domain/dates';
+import { MAX_PACE_SEC, MIN_PACE_SEC, formatPace } from '../domain/zones';
 import type { PlannedDay, PlannedWeek, SessionType } from '../domain/types';
 import { SESSION_TYPES } from '../domain/types';
 import { renderSession, type Dict } from '../i18n';
@@ -10,6 +11,58 @@ export const EM_DASH = '—';
 
 export const shortDate = (iso: string, dict: Dict): string =>
   `${dayOfMonth(iso)} ${dict.months[monthIndex(iso)]}`;
+
+/**
+ * Parses `m:ss`, `mm:ss` or a bare number of seconds. Returns null for
+ * anything that is not a time, so a half-typed field clears the value rather
+ * than storing a guess.
+ *
+ * Strict on purpose: `1:05:30`, `-1:30` and `0:00` are all not a duration
+ * this field can mean, and storing any of them would put a value in state
+ * that the schema layer throws away on the next load - the plan would then
+ * change under the user on a refresh they did not ask for.
+ */
+export function parseMmSs(raw: string): number | null {
+  if (!raw) return null;
+  const parts = raw.split(':');
+  if (parts.length > 2) return null;
+
+  if (parts.length === 2) {
+    if (!/^\d+$/.test(parts[0] as string) || !/^\d{1,2}$/.test(parts[1] as string)) return null;
+    const m = Number.parseInt(parts[0] as string, 10);
+    const s = Number.parseInt(parts[1] as string, 10);
+    if (s > 59) return null;
+    const total = m * 60 + s;
+    return total > 0 ? total : null;
+  }
+
+  if (!/^\d+$/.test(raw)) return null;
+  const seconds = Number.parseInt(raw, 10);
+  return seconds > 0 ? seconds : null;
+}
+
+/**
+ * Parses a goal finish written as `h:mm` or `h:mm:ss` - the way a Hyrox
+ * athlete says it. Two parts are hours and minutes, not minutes and seconds,
+ * because that is what the field asks for and `1:25` means 1:25:00 to
+ * everyone who races this.
+ */
+export function parseGoalFinish(raw: string, min = 1800, max = 5 * 3600): number | null {
+  if (!raw) return null;
+  const parts = raw.split(':');
+  if (parts.length < 2 || parts.length > 3) return null;
+  if (!parts.every((part) => /^\d+$/.test(part))) return null;
+
+  const numbers = parts.map((part) => Number.parseInt(part, 10));
+  const seconds =
+    numbers.length === 3
+      ? (numbers[0] as number) * 3600 + (numbers[1] as number) * 60 + (numbers[2] as number)
+      : (numbers[0] as number) * 3600 + (numbers[1] as number) * 60;
+
+  if ((numbers[1] as number) > 59) return null;
+  if (numbers.length === 3 && (numbers[2] as number) > 59) return null;
+  return seconds >= min && seconds <= max ? seconds : null;
+}
 
 export const IconGear = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -59,10 +112,12 @@ export interface LogPanelProps {
   date: string;
   entry: LogEntry | undefined;
   dict: Dict;
+  /** Compromised runs ask for the 1 km split; nothing else does. */
+  askForSplit?: boolean;
   onChange: (next: LogEntry | null) => void;
 }
 
-export function LogPanel({ entry, dict, onChange }: LogPanelProps): JSX.Element {
+export function LogPanel({ entry, dict, askForSplit, onChange }: LogPanelProps): JSX.Element {
   const done = entry?.done ?? false;
   return (
     <div class="log-block">
@@ -101,6 +156,34 @@ export function LogPanel({ entry, dict, onChange }: LogPanelProps): JSX.Element 
               </button>
             ))}
           </div>
+          {askForSplit && (
+            <>
+              <div class="log-label" style="margin-top:16px;">{dict.splitLabel}</div>
+              <input
+                class="split-input"
+                type="text"
+                inputMode="numeric"
+                placeholder="m:ss"
+                aria-label={dict.splitLabel}
+                value={entry?.splitSec === undefined ? '' : formatPace(entry.splitSec)}
+                onBlur={(e) => {
+                  const raw = (e.target as HTMLInputElement).value.trim();
+                  const seconds = parseMmSs(raw);
+                  // A split outside human 1 km range is a typo. Storing it
+                  // would drag the station penalty around until the next
+                  // reload threw it away again.
+                  const usable =
+                    seconds !== null && seconds >= MIN_PACE_SEC && seconds <= MAX_PACE_SEC;
+                  onChange({
+                    ...entry,
+                    done: true,
+                    splitSec: usable ? (seconds as number) : undefined,
+                  });
+                }}
+              />
+              <div class="section-hint">{dict.splitHint}</div>
+            </>
+          )}
           <textarea
             class="note-input"
             rows={2}
@@ -231,7 +314,13 @@ export function DayRow({
           <div>{session.details}</div>
           {session.why && <div class="why">{session.why}</div>}
           {day.effectiveType !== 'rest' && (
-            <LogPanel date={day.date} entry={entry} dict={dict} onChange={onLog} />
+            <LogPanel
+              date={day.date}
+              entry={entry}
+              dict={dict}
+              askForSplit={day.effectiveType === 'compromised'}
+              onChange={onLog}
+            />
           )}
         </div>
       )}

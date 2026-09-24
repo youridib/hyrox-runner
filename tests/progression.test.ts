@@ -183,7 +183,7 @@ describe('getSessionSpec variant selection', () => {
       ['intervals', 'build', 'intervalsBuild'],
       ['intervals', 'racespec', 'intervalsRaceSpec'],
       ['intervals', 'sharpen', 'intervalsSharpen'],
-      ['intervals', 'taper', 'intervalsTaper'],
+      ['intervals', 'taper', 'intervalsTaperEarly'],
       ['tempo', 'base', 'tempoBase'],
       ['tempo', 'build', 'tempoBuild'],
       ['tempo', 'racespec', 'tempoRaceSpec'],
@@ -193,7 +193,7 @@ describe('getSessionSpec variant selection', () => {
       ['compromised', 'build', 'compromisedNormal'],
       ['long', 'taper', 'longTaper'],
       ['long', 'build', 'longNormal'],
-      ['hyrox', 'taper', 'hyroxTaper'],
+      ['hyrox', 'taper', 'hyroxTaperEarly'],
       ['hyrox', 'build', 'hyroxNormal'],
     ];
     for (const [type, phase, variant] of table) {
@@ -201,6 +201,33 @@ describe('getSessionSpec variant selection', () => {
         variant,
       );
     }
+  });
+
+  // The taper is two weeks, and the two weeks are not the same session: week
+  // one trims the normal work, only the final seven days take the fixed copy.
+  it('separates the two taper weeks', () => {
+    const raceWeek = (type: SessionType) =>
+      getSessionSpec(type, zones, ctx('taper', 2, false, 3), false).variant;
+    const taperWeekOne = (type: SessionType) =>
+      getSessionSpec(type, zones, ctx('taper', 1, false, 12), false).variant;
+
+    expect(raceWeek('intervals')).toBe('intervalsTaper');
+    expect(taperWeekOne('intervals')).toBe('intervalsTaperEarly');
+    expect(raceWeek('tempo')).toBe('tempoTaper');
+    expect(taperWeekOne('tempo')).toBe('tempoTaperEarly');
+    expect(raceWeek('compromised')).toBe('compromisedTaper');
+    expect(taperWeekOne('compromised')).toBe('compromisedTaperEarly');
+    expect(raceWeek('hyrox')).toBe('hyroxTaper');
+    expect(taperWeekOne('hyrox')).toBe('hyroxTaperEarly');
+  });
+
+  it('keeps a VO2 dose alive through build and racespec', () => {
+    const vo2Week = { ...ctx('build', 2), blockWeekIndex: 3 };
+    const otherWeek = { ...ctx('build', 2), blockWeekIndex: 4 };
+    expect(getSessionSpec('intervals', zones, vo2Week, false).variant).toBe(
+      'intervalsVo2Maintenance',
+    );
+    expect(getSessionSpec('intervals', zones, otherWeek, false).variant).toBe('intervalsBuild');
   });
 
   it('assigns a colour token to every session', () => {

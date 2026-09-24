@@ -6,14 +6,16 @@ describe('getPhase boundaries', () => {
     const cases: Array<[number, string]> = [
       [-1, 'past'],
       [0, 'taper'],
+      // The taper is 14 days: Bosquet's 8-14 day window, not a single week.
       [7, 'taper'],
-      [8, 'sharpen'],
-      [21, 'sharpen'],
-      [22, 'racespec'],
-      [42, 'racespec'],
-      [43, 'build'],
-      [63, 'build'],
-      [64, 'base'],
+      [14, 'taper'],
+      [15, 'sharpen'],
+      [28, 'sharpen'],
+      [29, 'racespec'],
+      [49, 'racespec'],
+      [50, 'build'],
+      [70, 'build'],
+      [71, 'base'],
       [400, 'base'],
     ];
     for (const [dtr, expected] of cases) expect(getPhase(dtr), `dtr=${dtr}`).toBe(expected);
@@ -36,22 +38,26 @@ describe('getPhase boundaries', () => {
 
 describe('computeWeekInPhase', () => {
   it('counts forward through each fixed-length phase', () => {
-    expect(computeWeekInPhase(42, 'racespec').week).toBe(1);
-    expect(computeWeekInPhase(35, 'racespec').week).toBe(2);
-    expect(computeWeekInPhase(22, 'racespec').week).toBe(3);
-    expect(computeWeekInPhase(42, 'racespec').total).toBe(3);
+    expect(computeWeekInPhase(49, 'racespec').week).toBe(1);
+    expect(computeWeekInPhase(42, 'racespec').week).toBe(2);
+    expect(computeWeekInPhase(29, 'racespec').week).toBe(3);
+    expect(computeWeekInPhase(49, 'racespec').total).toBe(3);
 
-    expect(computeWeekInPhase(21, 'sharpen').week).toBe(1);
-    expect(computeWeekInPhase(8, 'sharpen').week).toBe(2);
-    expect(computeWeekInPhase(21, 'sharpen').total).toBe(2);
+    expect(computeWeekInPhase(28, 'sharpen').week).toBe(1);
+    expect(computeWeekInPhase(15, 'sharpen').week).toBe(2);
+    expect(computeWeekInPhase(28, 'sharpen').total).toBe(2);
 
-    expect(computeWeekInPhase(63, 'build').week).toBe(1);
-    expect(computeWeekInPhase(43, 'build').week).toBe(3);
-    expect(computeWeekInPhase(63, 'build').total).toBe(3);
+    expect(computeWeekInPhase(14, 'taper').week).toBe(1);
+    expect(computeWeekInPhase(7, 'taper').week).toBe(2);
+    expect(computeWeekInPhase(14, 'taper').total).toBe(2);
+
+    expect(computeWeekInPhase(70, 'build').week).toBe(1);
+    expect(computeWeekInPhase(50, 'build').week).toBe(3);
+    expect(computeWeekInPhase(70, 'build').total).toBe(3);
   });
 
   it('clamps to the phase length rather than running past it', () => {
-    for (const dtr of [22, 23, 24]) {
+    for (const dtr of [29, 30, 31]) {
       const { week, total } = computeWeekInPhase(dtr, 'racespec');
       expect(week).toBeLessThanOrEqual(total!);
     }
@@ -92,13 +98,13 @@ describe('computeIsDeload', () => {
   });
 
   it('stays off in the weeks between', () => {
-    for (const dtr of [14, 21, 35, 42, 49, 63, 70, 77]) {
+    for (const dtr of [21, 35, 42, 49, 63, 70, 77]) {
       expect(computeIsDeload(dtr), `dtr=${dtr}`).toBe(false);
     }
   });
 
-  it('never fires inside race week', () => {
-    for (let dtr = -3; dtr <= 7; dtr++) expect(computeIsDeload(dtr), `dtr=${dtr}`).toBe(false);
+  it('never fires inside the taper', () => {
+    for (let dtr = -3; dtr <= 14; dtr++) expect(computeIsDeload(dtr), `dtr=${dtr}`).toBe(false);
   });
 
   it('spaces deloads exactly four weeks apart across a long block', () => {

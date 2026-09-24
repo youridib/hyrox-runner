@@ -1,7 +1,8 @@
 import type { JSX } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { paceRange, formatPace, per400 } from '../domain/zones';
+import { paceRange, formatClock, formatPace, per400 } from '../domain/zones';
 import { findToday } from '../domain/plan';
+import { buildRacePlan, type RacePlan } from '../domain/racePlan';
 import { dayOfWeek } from '../domain/dates';
 import type { PlannedDay, PlannedWeek, SessionType, Zone } from '../domain/types';
 import { store } from '../state/store';
@@ -13,7 +14,7 @@ import { SettingsDrawer } from './SettingsDrawer';
 import type { Dict } from '../i18n';
 import { getTips } from '../i18n/tips';
 
-type Tab = 'today' | 'week' | 'block';
+type Tab = 'today' | 'week' | 'block' | 'race';
 
 export function App(): JSX.Element {
   const state = useAppState();
@@ -38,6 +39,16 @@ export function App(): JSX.Element {
   const stats = useMemo(
     () => computeStats(plan, state.log, today),
     [plan, state.log, today],
+  );
+
+  const racePlan = useMemo(
+    () =>
+      buildRacePlan({
+        zones: plan.zones,
+        benchmarks: state.stationBenchmarks,
+        goalFinishSec: state.goalFinishSec,
+      }),
+    [plan.zones, state.stationBenchmarks, state.goalFinishSec],
   );
 
   /** Changes one date, or the recurring template from now on. */
@@ -97,7 +108,7 @@ export function App(): JSX.Element {
         <PhaseHero plan={plan} dict={dict} />
 
         <nav class="tabs" role="tablist">
-          {(['today', 'week', 'block'] as const).map((key) => (
+          {(['today', 'week', 'block', 'race'] as const).map((key) => (
             <button
               type="button"
               key={key}
@@ -106,14 +117,21 @@ export function App(): JSX.Element {
               class={`tab${tab === key ? ' active' : ''}`}
               onClick={() => setTab(key)}
             >
-              {key === 'today' ? dict.tabToday : key === 'week' ? dict.tabWeek : dict.tabBlock}
+              {key === 'today'
+                ? dict.tabToday
+                : key === 'week'
+                  ? dict.tabWeek
+                  : key === 'block'
+                    ? dict.tabBlock
+                    : dict.tabRace}
             </button>
           ))}
         </nav>
 
         {tab === 'today' && (
           <>
-            {plan.phase === 'taper' && plan.daysToRace > 0 && (
+            {/* The taper is 14 days; race week - the fixed part - is 7. */}
+            {plan.daysToRace > 0 && plan.daysToRace <= 7 && (
               <div class="race-week-banner">
                 <div class="label">{dict.raceWeekTitle}</div>
                 <div class="title">{dict.daysToGo(plan.daysToRace)}</div>
@@ -135,9 +153,12 @@ export function App(): JSX.Element {
           <section class="week">
             <div class="section-title">{dict.thisWeek}</div>
             <div class="section-hint">{dict.thisWeekHint}</div>
+            <IntensityStrip week={currentWeek} dict={dict} />
             <div class="week-list">{currentWeek.days.map(renderDay)}</div>
           </section>
         )}
+
+        {tab === 'race' && <RacePlanCard plan={racePlan} dict={dict} />}
 
         {tab === 'block' && (
           <section class="week">
@@ -273,6 +294,123 @@ function StatsStrip({
   );
 }
 
+/**
+ * How much of the week is hard.
+ *
+ * Hyrox days count as hard here while staying out of the adjacency rules -
+ * two separate questions that the original conflated. A week over ~30% hard
+ * is a week with no easy days left in it.
+ */
+function IntensityStrip({ week, dict }: { week: PlannedWeek; dict: Dict }): JSX.Element | null {
+  const { hardFraction, totalMin, overloaded } = week.intensity;
+  if (totalMin === 0) return null;
+
+  return (
+    <div class={`intensity-strip${overloaded ? ' is-warning' : ''}`}>
+      <div class="intensity-head">
+        <span class="label">{dict.intensityTitle}</span>
+        <span class="value">{dict.intensityLabel(Math.round(hardFraction * 100), totalMin)}</span>
+      </div>
+      <div class="intensity-bar" aria-hidden="true">
+        <span style={{ width: `${Math.min(100, Math.round(hardFraction * 100))}%` }} />
+      </div>
+      {overloaded && <div class="intensity-warning">{dict.intensityWarning}</div>}
+    </div>
+  );
+}
+
+/**
+ * The race plan: every number the app already held, arranged so it can be
+ * executed. Runs are flat by design - the average finisher loses 1:53 between
+ * run 1 and run 8, and a fast opening is what buys that loss.
+ */
+function RacePlanCard({ plan, dict }: { plan: RacePlan; dict: Dict }): JSX.Element {
+  const stations = [...plan.stations].sort((a, b) => b.secondsAvailable - a.secondsAvailable);
+  const goalImpossible = plan.goalPaceSec !== null && plan.goalPaceSec < 120;
+
+  return (
+    <section class="race-plan">
+      <div class="section-title">{dict.racePlanTitle}</div>
+      <div class="section-hint">{dict.racePlanHint}</div>
+
+      <div class="race-finish">
+        <div class="race-finish-value">{formatClock(plan.predictedFinishSec)}</div>
+        <div class="race-finish-label">{dict.predictedFinish}</div>
+        <div class="section-hint">{dict.predictedFinishHint}</div>
+        {plan.goalFinishSec !== null && (
+          <div class="race-goal">
+            <span>
+              {dict.goalFinishLabel} {formatClock(plan.goalFinishSec)}
+            </span>
+            {goalImpossible ? (
+              <span class="race-goal-warn">{dict.goalImpossible}</span>
+            ) : (
+              <span>
+                {dict.goalPaceLabel}: {formatPace(plan.goalPaceSec as number)}/km
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div class="race-block">
+        <div class="race-block-title">{dict.runScheduleTitle}</div>
+        <div class="section-hint">{dict.runScheduleHint}</div>
+        <div class="race-runs">
+          {plan.runs.map((run) => (
+            <div class="race-run" key={run.index}>
+              <span class="label">{dict.runLabel(run.index)}</span>
+              <span class="value">{formatPace(run.seconds)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="race-block">
+        <div class="race-block-title">{dict.stationTargetsTitle}</div>
+        <div class="section-hint">{dict.stationTargetsHint}</div>
+        <div class="race-stations">
+          {stations.map((station) => (
+            <div class="race-station" key={station.station}>
+              <span class="label">
+                {dict.stations[station.station]}
+                {station.estimated && <span class="est">{dict.estimatedMark}</span>}
+              </span>
+              <span class="value">{formatPace(station.seconds)}</span>
+              <span class="target">
+                {dict.targetTimeLabel} {formatPace(station.targetSeconds)}
+              </span>
+              <span class={`gap${station.secondsAvailable > 0 ? ' is-gap' : ''}`}>
+                {station.secondsAvailable > 0
+                  ? `+${formatPace(station.secondsAvailable)}`
+                  : `−${formatPace(Math.abs(station.secondsAvailable))}`}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div class="section-hint">{dict.estimatedHint}</div>
+      </div>
+
+      <div class="race-block">
+        <div class="race-block-title">{dict.roxzoneTitle}</div>
+        <div class="race-roxzone">
+          {dict.roxzoneBudget(8, `${plan.transitionSec} s`, formatClock(plan.roxzoneSec))}
+        </div>
+        <div class="section-hint">{dict.roxzoneHint}</div>
+      </div>
+
+      <div class="race-block">
+        <div class="race-block-title">{dict.preRaceTitle}</div>
+        <ul class="tips-list">
+          {dict.preRaceSteps.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
 function PaceZones({ plan, dict }: { plan: ReturnType<typeof usePlan>; dict: Dict }): JSX.Element {
   const rows: Array<[string, Zone, string]> = [
     [dict.zones.easy!, plan.zones.easy, 'long'],
@@ -285,7 +423,12 @@ function PaceZones({ plan, dict }: { plan: ReturnType<typeof usePlan>; dict: Dic
   return (
     <section class="pace-zones">
       <div class="section-title">
-        {dict.paceZones} {'·'} {dict.paceZonesSub(formatPace(plan.zones.target.low))}
+        {dict.paceZones} {'·'}{' '}
+        {dict.paceZonesSub(formatPace(Math.round((plan.zones.target.low + plan.zones.target.high) / 2)))}
+      </div>
+      <div class="section-hint">
+        {plan.anchor.source === 'twoPoint' ? dict.anchorTwoPoint : dict.anchorSinglePoint} {'·'}{' '}
+        {dict.anchorDecay(plan.anchor.decaySec)}
       </div>
       <div class="pace-zone-list">
         {rows.map(([label, zone, color]) => (

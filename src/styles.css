@@ -12,6 +12,8 @@
   --tempo: #ec5a80;
   --long: #4cc39d;
   --compromised: #a68af7;
+  --easy: #57b6e8;
+  --timeTrial: #e8734a;
   --hyrox: #7a7a82;
   --shakeout: #5a5a62;
   --race: #ef4444;
@@ -33,6 +35,8 @@
     --tempo: #be185d;
     --long: #047857;
     --compromised: #6d28d9;
+    --easy: #0369a1;
+    --timeTrial: #c2410c;
     --hyrox: #52525b;
     --shakeout: #71717a;
     --race: #dc2626;
@@ -963,3 +967,149 @@ button { font-family: inherit; }
 }
 .tips-list li.tips-deload { color: var(--long); }
 .tips-list li.tips-deload::before { background: var(--long); }
+
+/* --- Weekly intensity accounting --- */
+.intensity-strip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.intensity-strip.is-warning { border-color: color-mix(in srgb, var(--race) 45%, var(--border)); }
+.intensity-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 12px;
+}
+.intensity-head .label { color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.intensity-head .value { color: var(--text); font-variant-numeric: tabular-nums; }
+.intensity-bar {
+  margin-top: 8px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.intensity-bar span { display: block; height: 100%; background: var(--intervals); }
+.intensity-strip.is-warning .intensity-bar span { background: var(--race); }
+.intensity-warning { margin-top: 8px; font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+
+/* --- Race plan --- */
+.race-plan { padding: 0 16px 24px; }
+.race-finish {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  margin: 12px 0 16px;
+  text-align: center;
+}
+.race-finish-value {
+  font-size: 40px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.race-finish-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.race-goal {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.race-goal-warn { color: var(--race); }
+.race-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.race-block-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.race-runs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 12px;
+  margin-top: 12px;
+}
+.race-run, .race-station {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.race-run:last-child, .race-station:last-child { border-bottom: none; }
+.race-run .label, .race-station .label { color: var(--text-muted); }
+.race-run .value, .race-station .value { font-variant-numeric: tabular-nums; color: var(--text); }
+.race-stations { margin-top: 12px; }
+.race-station { display: grid; grid-template-columns: 1fr auto auto auto; gap: 10px; }
+.race-station .target { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.race-station .gap { color: var(--long); font-variant-numeric: tabular-nums; }
+.race-station .gap.is-gap { color: var(--intervals); }
+.race-station .est {
+  margin-left: 6px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+.race-roxzone { margin: 10px 0 4px; font-size: 18px; font-variant-numeric: tabular-nums; }
+
+/* --- Time trials and station benchmarks --- */
+.pace-input.wide { width: 84px; }
+.tt-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.tt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.tt-remove {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+.benchmark-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.benchmark-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.benchmark-label { font-size: 13px; color: var(--text-muted); }
+.benchmark-stale {
+  margin-left: 6px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--race);
+}
+.benchmark-input, .split-input {
+  width: 92px;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.split-input { width: 110px; margin-top: 6px; }

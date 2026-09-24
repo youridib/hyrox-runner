@@ -32,7 +32,7 @@ describe('first render', () => {
   it('renders the shell without throwing', () => {
     render(<App />);
     expect(screen.getByText('Hyrox Runner')).toBeTruthy();
-    expect(document.querySelectorAll('.tab')).toHaveLength(3);
+    expect(document.querySelectorAll('.tab')).toHaveLength(4);
   });
 
   it('shows today with a real session, not a placeholder', () => {
@@ -91,22 +91,30 @@ describe('today tab is read-only', () => {
   });
 
   it('flags a deload week in the tips', () => {
-    // This week's Monday exactly 28 days out puts today in a deload week.
-    reset({ raceDate: addDays(mondayOf(TODAY), 28) });
+    // This week's Monday exactly 28 days out puts today in a deload week -
+    // but only once the block is old enough to have something to absorb, so
+    // the block has to have started a few weeks ago.
+    reset({
+      raceDate: addDays(mondayOf(TODAY), 28),
+      blockStart: addDays(mondayOf(TODAY), -28),
+    });
     render(<App />);
     expect(document.querySelector('.deload-badge')).toBeTruthy();
     expect(document.querySelector('.tips-card .tips-deload')).toBeTruthy();
   });
 
   it('shows no deload note in a normal week', () => {
-    reset({ raceDate: addDays(mondayOf(TODAY), 35) });
+    reset({
+      raceDate: addDays(mondayOf(TODAY), 35),
+      blockStart: addDays(mondayOf(TODAY), -28),
+    });
     render(<App />);
     expect(document.querySelector('.tips-card .tips-deload')).toBeNull();
   });
 });
 
 describe('tabs', () => {
-  it('switches between today, week and block', () => {
+  it('switches between today, week, block and race', () => {
     render(<App />);
     const tabs = Array.from(document.querySelectorAll('.tab')) as HTMLElement[];
 
@@ -115,6 +123,9 @@ describe('tabs', () => {
 
     fireEvent.click(tabs[2]!);
     expect(document.querySelectorAll('.block-week').length).toBeGreaterThan(4);
+
+    fireEvent.click(tabs[3]!);
+    expect(document.querySelector('.race-plan')).toBeTruthy();
 
     fireEvent.click(tabs[0]!);
     expect(document.querySelector('.today')).toBeTruthy();
@@ -377,5 +388,215 @@ describe('storage failure', () => {
     } finally {
       if (original) Object.defineProperty(globalThis, 'localStorage', original);
     }
+  });
+});
+
+describe('race plan tab', () => {
+  const openRaceTab = () => {
+    render(<App />);
+    fireEvent.click(document.querySelectorAll('.tab')[3]!);
+  };
+
+  it('shows a predicted finish, eight runs and eight stations', () => {
+    openRaceTab();
+    const plan = document.querySelector('.race-plan')!;
+    expect(plan).toBeTruthy();
+    expect(plan.querySelector('.race-finish-value')!.textContent).toMatch(/^\d+:\d{2}:\d{2}$/);
+    expect(plan.querySelectorAll('.race-run')).toHaveLength(8);
+    expect(plan.querySelectorAll('.race-station')).toHaveLength(8);
+  });
+
+  it('prescribes the same pace for every run, run 1 included', () => {
+    openRaceTab();
+    const paces = Array.from(document.querySelectorAll('.race-run .value')).map(
+      (node) => node.textContent,
+    );
+    expect(new Set(paces).size).toBe(1);
+  });
+
+  it('marks untested stations as estimates', () => {
+    openRaceTab();
+    expect(document.querySelectorAll('.race-station .est')).toHaveLength(8);
+  });
+
+  it('uses a logged benchmark instead of the population average', () => {
+    reset({ stationBenchmarks: { wallBalls: { seconds: 420, testedOn: TODAY } } });
+    openRaceTab();
+    const marked = document.querySelectorAll('.race-station .est');
+    expect(marked).toHaveLength(7);
+    expect(document.querySelector('.race-plan')!.textContent).toContain('7:00');
+  });
+
+  it('shows the pace a goal time requires', () => {
+    reset({ goalFinishSec: 5400 });
+    openRaceTab();
+    expect(document.querySelector('.race-goal')).toBeTruthy();
+    expect(document.querySelector('.race-goal')!.textContent).toContain('1:30:00');
+  });
+});
+
+describe('measuring the other 48%', () => {
+  const openSettings = () => {
+    render(<App />);
+    fireEvent.click(document.querySelector('.settings-btn')!);
+  };
+
+  it('stores a station benchmark typed as m:ss', () => {
+    openSettings();
+    const input = document.getElementById('bm-wallBalls') as HTMLInputElement;
+    fireEvent.blur(input, { target: { value: '5:30' } });
+    expect(store.get().stationBenchmarks.wallBalls!.seconds).toBe(330);
+    expect(store.get().stationBenchmarks.wallBalls!.testedOn).toBe(TODAY);
+  });
+
+  it('clears a benchmark when the field is emptied', () => {
+    reset({ stationBenchmarks: { row: { seconds: 300, testedOn: TODAY } } });
+    openSettings();
+    fireEvent.blur(document.getElementById('bm-row') as HTMLInputElement, {
+      target: { value: '' },
+    });
+    expect(store.get().stationBenchmarks.row).toBeUndefined();
+  });
+
+  it('adds a time trial and upgrades the pace anchor', () => {
+    reset({ timeTrials: [{ date: TODAY, meters: 2400, seconds: 550 }] });
+    openSettings();
+    fireEvent.input(document.getElementById('tt-meters-input') as HTMLInputElement, {
+      target: { value: '1200' },
+    });
+    fireEvent.input(document.getElementById('tt-time-input') as HTMLInputElement, {
+      target: { value: '4:10' },
+    });
+    fireEvent.click(screen.getByText('Add time trial'));
+
+    expect(store.get().timeTrials).toHaveLength(2);
+    expect(store.get().timeTrials[0]!.seconds).toBe(250);
+    expect(document.body.textContent).not.toContain('undefined');
+  });
+
+  it('ignores a half-typed time trial rather than storing a guess', () => {
+    openSettings();
+    fireEvent.input(document.getElementById('tt-meters-input') as HTMLInputElement, {
+      target: { value: '1200' },
+    });
+    fireEvent.click(screen.getByText('Add time trial'));
+    expect(store.get().timeTrials).toHaveLength(0);
+  });
+
+  it('changes division and category', () => {
+    openSettings();
+    fireEvent.change(document.getElementById('division-select') as HTMLSelectElement, {
+      target: { value: 'pro' },
+    });
+    expect(store.get().division).toBe('pro');
+    fireEvent.click(screen.getByText('Women'));
+    expect(store.get().sex).toBe('female');
+  });
+
+  it('logs a compromised-run split, and only on compromised days', () => {
+    // Race-specific phase, so the week carries a compromised run.
+    reset({ raceDate: addDays(TODAY, 40), blockStart: addDays(mondayOf(TODAY), -28) });
+    render(<App />);
+    fireEvent.click(document.querySelectorAll('.tab')[1]!);
+
+    const headers = Array.from(document.querySelectorAll('.day-row-header'));
+    let found = false;
+    for (const header of headers) {
+      fireEvent.click(header);
+      const doneBtn = document.querySelector('.done-btn');
+      if (doneBtn) fireEvent.click(doneBtn);
+      const split = document.querySelector('.split-input') as HTMLInputElement | null;
+      if (split) {
+        fireEvent.blur(split, { target: { value: '5:40' } });
+        found = true;
+        break;
+      }
+      fireEvent.click(header);
+    }
+
+    expect(found).toBe(true);
+    const entry = Object.values(store.get().log).find((e) => e.splitSec !== undefined);
+    expect(entry!.splitSec).toBe(340);
+  });
+});
+
+describe('weekly intensity', () => {
+  it('shows how much of the week is hard', () => {
+    render(<App />);
+    fireEvent.click(document.querySelectorAll('.tab')[1]!);
+    const strip = document.querySelector('.intensity-strip');
+    expect(strip).toBeTruthy();
+    expect(strip!.textContent).toMatch(/\d+%/);
+  });
+
+  it('warns when a week has no easy days left in it', () => {
+    // Hyrox every day: every planned minute is hard.
+    reset({
+      weeklyTemplate: ['hyrox', 'hyrox', 'hyrox', 'hyrox', 'hyrox', 'hyrox', 'hyrox'],
+    });
+    render(<App />);
+    fireEvent.click(document.querySelectorAll('.tab')[1]!);
+    expect(document.querySelector('.intensity-strip.is-warning')).toBeTruthy();
+    expect(document.querySelector('.intensity-warning')).toBeTruthy();
+  });
+});
+
+describe('settings inputs never store what a reload would discard', () => {
+  const openSettings = () => {
+    render(<App />);
+    fireEvent.click(document.querySelector('.settings-btn')!);
+  };
+
+  it('does not re-date a benchmark that was only tabbed through', () => {
+    // Blur fires on every focus loss. Re-dating here would reset the six-week
+    // staleness clock without the user changing anything.
+    const old = { seconds: 420, testedOn: addDays(TODAY, -60) };
+    reset({ stationBenchmarks: { wallBalls: old } });
+    openSettings();
+    const input = document.getElementById('bm-wallBalls') as HTMLInputElement;
+    fireEvent.blur(input, { target: { value: input.value } });
+    expect(store.get().stationBenchmarks.wallBalls).toEqual(old);
+  });
+
+  it('re-dates a benchmark that actually changed', () => {
+    reset({ stationBenchmarks: { wallBalls: { seconds: 420, testedOn: addDays(TODAY, -60) } } });
+    openSettings();
+    fireEvent.blur(document.getElementById('bm-wallBalls') as HTMLInputElement, {
+      target: { value: '6:00' },
+    });
+    expect(store.get().stationBenchmarks.wallBalls).toEqual({ seconds: 360, testedOn: TODAY });
+  });
+
+  it('refuses a benchmark that is not a plausible station time', () => {
+    openSettings();
+    for (const value of ['0:00', '99:00', '1:05:30']) {
+      fireEvent.blur(document.getElementById('bm-row') as HTMLInputElement, {
+        target: { value },
+      });
+      expect(store.get().stationBenchmarks.row, value).toBeUndefined();
+    }
+  });
+
+  it('reads a goal finish as hours and minutes', () => {
+    openSettings();
+    const input = document.getElementById('goal-finish-input') as HTMLInputElement;
+    fireEvent.blur(input, { target: { value: '1:25' } });
+    expect(store.get().goalFinishSec).toBe(5100);
+
+    // And refuses one the schema would drop on the next load.
+    fireEvent.blur(input, { target: { value: '0:10' } });
+    expect(store.get().goalFinishSec).toBeNull();
+  });
+
+  it('refuses a time trial outside the bounds storage keeps', () => {
+    openSettings();
+    fireEvent.input(document.getElementById('tt-meters-input') as HTMLInputElement, {
+      target: { value: '50000' },
+    });
+    fireEvent.input(document.getElementById('tt-time-input') as HTMLInputElement, {
+      target: { value: '4:10' },
+    });
+    fireEvent.click(screen.getByText('Add time trial'));
+    expect(store.get().timeTrials).toHaveLength(0);
   });
 });

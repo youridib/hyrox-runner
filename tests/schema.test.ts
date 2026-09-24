@@ -5,6 +5,7 @@ import {
   defaultState,
   migrate,
   parseImport,
+  recentSplits,
 } from '../src/state/schema';
 import { isValidISO } from '../src/domain/dates';
 import { SESSION_TYPES } from '../src/domain/types';
@@ -191,5 +192,106 @@ describe('parseImport', () => {
     const result = parseImport('{"hyroxDays":[0,2],"raceDate":"2026-10-24"}', TODAY);
     expect('error' in result).toBe(false);
     expect((result as { version: number }).version).toBe(SCHEMA_VERSION);
+  });
+});
+
+describe('v4 fields: the other 48% of the race', () => {
+  it('defaults a fresh state to Open men with nothing measured yet', () => {
+    const s = defaultState(TODAY);
+    expect(s.division).toBe('open');
+    expect(s.sex).toBe('male');
+    expect(s.timeTrials).toEqual([]);
+    expect(s.stationBenchmarks).toEqual({});
+    expect(s.goalFinishSec).toBeNull();
+  });
+
+  it('carries a v3 state forward without losing anything', () => {
+    const v3 = {
+      version: 3,
+      raceDate: '2026-10-24',
+      currentPaceSec: 290,
+      weeklyTemplate: ['hyrox', null, null, null, null, null, null],
+      log: { '2026-06-30': { done: true, rpe: 7 } },
+      language: 'nl',
+    };
+    const s = migrate(v3, TODAY);
+    expect(s.version).toBe(SCHEMA_VERSION);
+    expect(s.currentPaceSec).toBe(290);
+    expect(s.language).toBe('nl');
+    expect(s.division).toBe('open');
+    expect(s.timeTrials).toEqual([]);
+  });
+
+  it('keeps valid time trials, newest first, and drops impossible ones', () => {
+    const s = migrate(
+      {
+        timeTrials: [
+          { date: '2026-06-01', meters: 1200, seconds: 250 },
+          { date: '2026-06-20', meters: 2400, seconds: 550 },
+          { date: 'not-a-date', meters: 1200, seconds: 250 },
+          { date: '2026-06-02', meters: 50, seconds: 12 },
+          { date: '2026-06-03', meters: 1200, seconds: -4 },
+          'nonsense',
+        ],
+      },
+      TODAY,
+    );
+    expect(s.timeTrials).toHaveLength(2);
+    expect(s.timeTrials[0]!.date).toBe('2026-06-20');
+  });
+
+  it('keeps station benchmarks inside plausible bounds and drops unknown stations', () => {
+    const s = migrate(
+      {
+        stationBenchmarks: {
+          wallBalls: { seconds: 420, testedOn: '2026-06-01' },
+          row: { seconds: 1e9, testedOn: '2026-06-01' },
+          notAStation: { seconds: 200, testedOn: '2026-06-01' },
+          sledPull: { seconds: 300 },
+        },
+      },
+      TODAY,
+    );
+    expect(s.stationBenchmarks.wallBalls).toEqual({ seconds: 420, testedOn: '2026-06-01' });
+    expect(s.stationBenchmarks.row).toBeUndefined();
+    expect(s.stationBenchmarks.sledPull!.seconds).toBe(300);
+    expect(Object.keys(s.stationBenchmarks)).not.toContain('notAStation');
+  });
+
+  it('accepts a logged split only when it is a plausible kilometre', () => {
+    const s = migrate(
+      {
+        log: {
+          '2026-06-30': { done: true, splitSec: 330 },
+          '2026-06-29': { done: true, splitSec: 20 },
+          '2026-06-28': { done: true, splitSec: 'fast' },
+        },
+      },
+      TODAY,
+    );
+    expect(s.log['2026-06-30']!.splitSec).toBe(330);
+    expect(s.log['2026-06-29']!.splitSec).toBeUndefined();
+    expect(s.log['2026-06-28']!.splitSec).toBeUndefined();
+  });
+
+  it('rejects a division, category or goal it does not recognise', () => {
+    const s = migrate({ division: 'elite', sex: 'other', goalFinishSec: 5 }, TODAY);
+    expect(s.division).toBe('open');
+    expect(s.sex).toBe('male');
+    expect(s.goalFinishSec).toBeNull();
+    expect(migrate({ goalFinishSec: 5400 }, TODAY).goalFinishSec).toBe(5400);
+  });
+
+  it('collects only recent splits for calibration, newest first', () => {
+    const splits = recentSplits(
+      {
+        '2026-06-30': { done: true, splitSec: 330 },
+        '2026-06-20': { done: true, splitSec: 340 },
+        '2020-01-01': { done: true, splitSec: 400 },
+        '2026-06-10': { done: true },
+      },
+      TODAY,
+    );
+    expect(splits).toEqual([330, 340]);
   });
 });

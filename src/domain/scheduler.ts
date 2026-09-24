@@ -1,7 +1,14 @@
 import type { PhaseKey, SessionType } from './types';
 
-/** Sessions that carry real neuromuscular cost and must be spaced apart. */
-export const HARD_TYPES: readonly SessionType[] = ['intervals', 'tempo', 'compromised'];
+/**
+ * Sessions that carry real neuromuscular cost and must be spaced apart.
+ *
+ * This is the *spacing* set. It deliberately excludes `hyrox`: station work
+ * is high-intensity and is counted as hard by the weekly intensity
+ * accounting, but making it block adjacency here would leave no feasible week
+ * for anyone training three Hyrox days.
+ */
+export const HARD_TYPES: readonly SessionType[] = ['intervals', 'tempo', 'compromised', 'timeTrial'];
 
 const isHard = (t: SessionType | null): boolean =>
   t !== null && HARD_TYPES.includes(t);
@@ -27,6 +34,8 @@ export const WEIGHTS = {
   intervalsEarly: -0.3,
   /** Nudges long/compromised later in the week, when there is time. */
   enduranceLate: 0.4,
+  /** Nudges the time trial toward the end of its deload week, on fresh legs. */
+  timeTrialLate: 0.5,
 } as const;
 
 /** Circular distance between two weekdays, 0-3. */
@@ -62,7 +71,10 @@ export function scorePlacement(
     for (const hyroxDay of hyroxDays) {
       if (circularDist(day, hyroxDay) !== 1) continue;
       const isDayAfter = (hyroxDay + 1) % 7 === day;
-      if (isDayAfter && heaviestDay !== null && heaviestDay === hyroxDay) {
+      // The penalty only applies to hard work, which is what the weight is
+      // named for. A shakeout the day after a heavy lift is a good thing, and
+      // the old form penalised it by the same -15.
+      if (hard && isDayAfter && heaviestDay !== null && heaviestDay === hyroxDay) {
         score += WEIGHTS.hardAfterHeaviest;
       } else if (hard) {
         score += WEIGHTS.hardNearHyrox;
@@ -72,6 +84,7 @@ export function scorePlacement(
     }
 
     if (type === 'intervals') score += day * WEIGHTS.intervalsEarly;
+    else if (type === 'timeTrial') score += day * WEIGHTS.timeTrialLate;
     else if (type === 'long' || type === 'compromised') score += day * WEIGHTS.enduranceLate;
   }
 
@@ -110,18 +123,37 @@ function* permutations<T>(arr: readonly T[], k: number): Generator<T[]> {
   }
 }
 
+export interface WeekOptions {
+  /** 0-based index of this week in the block; drives fortnightly rotations. */
+  blockWeekIndex?: number;
+  /**
+   * Schedule a fresh-legs time trial. Deload weeks are where it belongs: the
+   * pace anchor goes stale otherwise, and nothing else ever re-tests it.
+   */
+  timeTrial?: boolean;
+  /**
+   * Let a low-dose compromised run replace the long run. Used from mid-build,
+   * every second week, so decay reduction starts months before racespec.
+   */
+  compromisedInBuild?: boolean;
+  /** Fill leftover free days with easy aerobic running rather than shakeouts. */
+  easyVolume?: boolean;
+}
+
 /**
  * Fills the unpinned days of a normal (non-race) week.
  *
- * The week wants up to three quality sessions - intervals, tempo, and either
- * a long run or, once the block turns race-specific, a compromised run. What
- * the user already pinned counts toward that budget; whatever is missing gets
- * placed in the free slots by exhaustive search over the scoring function.
+ * The week wants up to three quality sessions - intervals, a tempo, and
+ * either a long run or, once the block turns race-specific, a compromised
+ * run. What the user already pinned counts toward that budget; whatever is
+ * missing gets placed in the free slots by exhaustive search over the scoring
+ * function.
  */
 export function autoFillNormal(
   pinned: readonly (SessionType | null)[],
   phase: PhaseKey,
   heaviestDay: number | null,
+  opts: WeekOptions = {},
 ): SessionType[] {
   const result: (SessionType | null)[] = [...pinned];
   const autoIdx: number[] = [];
@@ -143,7 +175,8 @@ export function autoFillNormal(
   if (autoIdx.length === 0) return result as SessionType[];
 
   const isRaceSpecific = phase === 'racespec' || phase === 'sharpen';
-  const enduranceType: SessionType = isRaceSpecific ? 'compromised' : 'long';
+  const enduranceType: SessionType =
+    isRaceSpecific || (phase === 'build' && opts.compromisedInBuild) ? 'compromised' : 'long';
   const hasEndurancePinned = pinnedTypes.has('long') || pinnedTypes.has('compromised');
 
   const pinnedQualityCount =
@@ -152,11 +185,28 @@ export function autoFillNormal(
 
   // Ordered by how much each session matters, most important first, because
   // this is also the order they get dropped in when the week cannot hold them.
+  //
+  // The ordering is phase-dependent: in racespec and sharpen the race-specific
+  // work comes first and the tempo goes first when something has to go. In
+  // base and build, threshold work is the more direct adaptation for a race
+  // whose limiter is holding pace while flooded, so a third interval session
+  // is the one that gets dropped instead.
   let desired: SessionType[];
   if (budget <= 0) desired = [];
   else if (budget === 1) desired = [isRaceSpecific ? 'intervals' : 'tempo'];
   else if (budget === 2) desired = ['intervals', enduranceType];
-  else desired = ['intervals', enduranceType, 'tempo'];
+  else if (isRaceSpecific) desired = ['intervals', enduranceType, 'tempo'];
+  else desired = ['tempo', enduranceType, 'intervals'];
+
+  // A time trial is a quality session, not an extra one: it takes the place
+  // of the least important session in the week rather than sitting on top of
+  // all three. Without this the deload week - the week it is scheduled in -
+  // would carry more hard days than a normal week, which is the opposite of a
+  // deload. It goes in the search rather than being pinned to a fixed day,
+  // because a pinned Sunday can make the rest of the week unplaceable.
+  if (opts.timeTrial && !pinnedTypes.has('timeTrial')) {
+    desired = ['timeTrial', ...desired.slice(0, Math.max(0, desired.length - 1))];
+  }
 
   const needed = desired.filter((t) => {
     if (pinnedTypes.has(t)) return false;
@@ -201,8 +251,31 @@ export function autoFillNormal(
     break;
   }
 
-  for (const d of autoIdx) if (result[d] === null) result[d] = 'shakeout';
+  // Whatever is left over is recovery - except that a week of nothing but
+  // recovery caps the aerobic ceiling that decides the race, so the earliest
+  // leftover day carries genuine easy volume instead.
+  const leftover = autoIdx.filter((d) => result[d] === null);
+  for (const [i, d] of leftover.entries()) {
+    result[d] = opts.easyVolume && i === 0 && leftover.length > 1 ? 'easy' : 'shakeout';
+  }
+
   return result as SessionType[];
+}
+
+/**
+ * The fixed shape of the final seven days, by days to race.
+ *
+ * Returns null further out than that: with a 14-day taper, the first taper
+ * week keeps its normal frequency and only has its volume cut.
+ */
+export function taperFixedType(daysToRace: number): SessionType | null {
+  if (daysToRace < 0) return 'shakeout';
+  if (daysToRace === 0) return 'rest'; // overridden by isRaceDay downstream
+  if (daysToRace === 1) return 'rest';
+  if (daysToRace === 2) return 'shakeout';
+  if (daysToRace === 3) return 'intervals';
+  if (daysToRace <= 7) return 'shakeout';
+  return null;
 }
 
 /**
@@ -217,13 +290,7 @@ export function autoFillTaper(
   const result: (SessionType | null)[] = [...pinned];
   for (let d = 0; d < 7; d++) {
     if (result[d] !== null && result[d] !== undefined) continue;
-    const dtr = daysToRacePerDay[d] as number;
-    if (dtr < 0) result[d] = 'shakeout';
-    else if (dtr === 0) result[d] = 'rest'; // overridden by isRaceDay downstream
-    else if (dtr === 1) result[d] = 'rest';
-    else if (dtr === 2) result[d] = 'shakeout';
-    else if (dtr === 3) result[d] = 'intervals';
-    else result[d] = 'shakeout';
+    result[d] = taperFixedType(daysToRacePerDay[d] as number) ?? 'shakeout';
   }
   return result as SessionType[];
 }
@@ -233,7 +300,14 @@ export function fillWeek(
   phase: PhaseKey,
   heaviestDay: number | null,
   daysToRacePerDay: readonly number[],
+  opts: WeekOptions = {},
 ): SessionType[] {
-  if (phase === 'taper') return autoFillTaper(pinned, daysToRacePerDay);
-  return autoFillNormal(pinned, phase, heaviestDay);
+  if (phase !== 'taper') return autoFillNormal(pinned, phase, heaviestDay, opts);
+
+  // A taper week can straddle the boundary: the days inside the final seven
+  // take the fixed shape, the days outside it are planned normally at taper
+  // volume. That keeps frequency and intensity intact where Bosquet says they
+  // should be, and keeps race week untouchable where it must be.
+  const withFixed = pinned.map((p, d) => p ?? taperFixedType(daysToRacePerDay[d] as number));
+  return autoFillNormal(withFixed, phase, heaviestDay, { ...opts, timeTrial: false });
 }

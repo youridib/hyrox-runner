@@ -3,7 +3,9 @@ import type { Plan } from '../domain/plan';
 import type { LogEntry } from '../state/schema';
 
 /** Session types that count as a training session for completion stats. */
-const COUNTED = new Set(['intervals', 'tempo', 'long', 'compromised', 'hyrox', 'shakeout']);
+const COUNTED = new Set([
+  'intervals', 'tempo', 'long', 'easy', 'compromised', 'timeTrial', 'hyrox', 'shakeout',
+]);
 
 export interface Stats {
   /** Sessions completed in the trailing window. */

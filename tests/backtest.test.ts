@@ -167,16 +167,23 @@ describe('backtest: the plan advances sensibly as the weeks pass', () => {
     }
   });
 
-  it('places compromised runs only once the block turns race-specific', () => {
+  // Compromised running now starts in build, at low dose, every second week:
+  // the decay-reduction adaptation is worth starting months before racespec.
+  // It still never appears in base.
+  it('places compromised runs no earlier than mid-build', () => {
     const cfg = config('2026-10-24', 4); // the "no Hyrox at all" template
     const blockStart = addDays('2026-10-24', -140);
     const plan = buildPlan(cfg, blockStart, { blockStart });
+    let buildWeeksWithCompromised = 0;
     for (const week of plan.weeks) {
       const hasCompromised = week.days.some((d) => d.effectiveType === 'compromised');
-      if (hasCompromised) {
-        expect(['racespec', 'sharpen'], week.monday).toContain(week.phase);
-      }
+      if (!hasCompromised) continue;
+      expect(['build', 'racespec', 'sharpen', 'taper'], week.monday).toContain(week.phase);
+      if (week.phase === 'build') buildWeeksWithCompromised++;
     }
+    // Every second build week at most, not all of them.
+    expect(buildWeeksWithCompromised).toBeGreaterThan(0);
+    expect(buildWeeksWithCompromised).toBeLessThanOrEqual(2);
   });
 });
 

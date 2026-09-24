@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { todayISO } from '../domain/dates';
 import { buildPlan, type Plan } from '../domain/plan';
+import { recentSplits } from '../state/schema';
 import { store, type AppState } from '../state/store';
 import { getDict } from '../i18n';
 
@@ -54,6 +55,13 @@ export function usePlan(state: AppState, today: string): Plan {
           weeklyTemplate: state.weeklyTemplate,
           overrides: state.overrides,
           heaviestDay: state.heaviestDay,
+          timeTrials: state.timeTrials,
+          // Splits come out of the log, so logging a compromised run is what
+          // moves target pace off the population seed and onto this athlete.
+          compromisedSplits: recentSplits(state.log, today),
+          stationBenchmarks: state.stationBenchmarks,
+          division: state.division,
+          sex: state.sex,
         },
         today,
         { blockStart: state.blockStart },
@@ -65,6 +73,11 @@ export function usePlan(state: AppState, today: string): Plan {
       state.overrides,
       state.heaviestDay,
       state.blockStart,
+      state.timeTrials,
+      state.log,
+      state.stationBenchmarks,
+      state.division,
+      state.sex,
       today,
     ],
   );

@@ -1,4 +1,4 @@
-import type { SessionArgs } from '../domain/types';
+import type { SessionArgs, Station } from '../domain/types';
 
 /** A field that is either a literal or derived from the session's numbers. */
 export type Field = string | ((a: SessionArgs) => string);
@@ -18,24 +18,31 @@ export interface SessionVariant {
 export interface SessionDict {
   race: SessionVariant;
   hyroxTaper: SessionVariant;
+  hyroxTaperEarly: SessionVariant;
   hyroxNormal: SessionVariant;
   restEve: SessionVariant;
   restNormal: SessionVariant;
   shakeoutEve: SessionVariant;
   shakeoutNormal: SessionVariant;
+  easyNormal: SessionVariant;
+  timeTrialNormal: SessionVariant;
   longTaper: SessionVariant;
   longNormal: SessionVariant;
   intervalsTaper: SessionVariant;
+  intervalsTaperEarly: SessionVariant;
+  intervalsVo2Maintenance: SessionVariant;
   intervalsRaceSpec: SessionVariant;
   intervalsSharpen: SessionVariant;
   intervalsBuild: SessionVariant;
   intervalsBase: SessionVariant;
   tempoTaper: SessionVariant;
+  tempoTaperEarly: SessionVariant;
   tempoBase: SessionVariant;
   tempoBuild: SessionVariant;
   tempoRaceSpec: SessionVariant;
   tempoSharpen: SessionVariant;
   compromisedTaper: SessionVariant;
+  compromisedTaperEarly: SessionVariant;
   compromisedRaceSpec: SessionVariant;
   compromisedSharpen: SessionVariant;
   compromisedNormal: SessionVariant;
@@ -127,4 +134,64 @@ export interface Dict {
   cancel: string;
   tipsTitle: string;
   deloadTip: string;
+
+  // --- Added in v4: the other 48% of the race ---
+  /** Station names, keyed the way the domain keys them. */
+  stations: Record<Station, string>;
+  tabRace: string;
+  racePlanTitle: string;
+  racePlanHint: string;
+  predictedFinish: string;
+  predictedFinishHint: string;
+  goalFinishLabel: string;
+  goalPaceLabel: string;
+  goalImpossible: string;
+  runScheduleTitle: string;
+  runScheduleHint: string;
+  runLabel: (n: number) => string;
+  stationTargetsTitle: string;
+  stationTargetsHint: string;
+  yourTimeLabel: string;
+  targetTimeLabel: string;
+  availableLabel: string;
+  estimatedMark: string;
+  estimatedHint: string;
+  roxzoneTitle: string;
+  roxzoneBudget: (transitions: number, each: string, total: string) => string;
+  roxzoneHint: string;
+  preRaceTitle: string;
+  preRaceSteps: string[];
+  /** Weekly intensity accounting. */
+  intensityTitle: string;
+  intensityLabel: (hardPct: number, totalMin: number) => string;
+  intensityWarning: string;
+  /** Pace anchor. */
+  anchorTwoPoint: string;
+  anchorSinglePoint: string;
+  anchorDecay: (seconds: number) => string;
+  timeTrialTitle: string;
+  timeTrialHint: string;
+  ttDistanceLabel: string;
+  ttTimeLabel: string;
+  ttAddBtn: string;
+  ttEmpty: string;
+  ttEntry: (meters: number, time: string, date: string) => string;
+  ttRemove: string;
+  /** Station benchmarks. */
+  benchmarksTitle: string;
+  benchmarksHint: string;
+  benchmarkStale: string;
+  benchmarkUnit: string;
+  /** Compromised-run split logging. */
+  splitLabel: string;
+  splitHint: string;
+  /** Division, sex and goal. */
+  divisionLabel: string;
+  divisionHint: string;
+  divisions: Record<string, string>;
+  sexLabel: string;
+  sexes: Record<string, string>;
+  goalFinishSetting: string;
+  goalFinishHint: string;
+  goalFinishNone: string;
 }

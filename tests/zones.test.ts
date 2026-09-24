@@ -47,10 +47,14 @@ describe('clampPace', () => {
 describe('computeZones', () => {
   it('orders the zones from fastest to slowest', () => {
     const z = computeZones(300);
+    // Hyrox target pace now sits *below* threshold, not above it: it is
+    // critical speed plus a station-fatigue penalty, which is the whole point
+    // of the new anchor. The old ordering prescribed a race pace most
+    // athletes cannot hold past run 3.
     expect(z.strides.low).toBeLessThan(z.vo2.low);
-    expect(z.vo2.low).toBeLessThan(z.target.low);
-    expect(z.target.low).toBeLessThan(z.threshold.low);
-    expect(z.threshold.low).toBeLessThan(z.easy.low);
+    expect(z.vo2.low).toBeLessThan(z.threshold.low);
+    expect(z.threshold.high).toBeLessThan(z.target.low);
+    expect(z.target.high).toBeLessThan(z.easy.low);
   });
 
   it('keeps low faster than high inside every zone', () => {
