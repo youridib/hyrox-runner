@@ -1,8 +1,11 @@
 import {
-  STATION_REFERENCE,
   TRANSITION_COUNT,
   TRANSITION_TARGET_SEC,
+  estimateStations,
+  goalStationTargets,
   stationP25,
+  type EstimateSource,
+  type StationEstimate,
 } from './stations';
 import { STATIONS, type Station, type StationBenchmark, type Zones } from './types';
 import { midPace } from './zones';
@@ -29,11 +32,17 @@ export interface StationTarget {
   station: Station;
   /** The athlete's benchmark, or the population average when untested. */
   seconds: number;
-  /** The P25 target for the same station. */
+  /** The P25 target for the same station - what the field does. */
   targetSeconds: number;
-  /** Seconds available against that target; negative means already ahead. */
+  /** Seconds available against P25; negative means already ahead. */
   secondsAvailable: number;
+  /** What your goal finish leaves for this station, or null with no goal. */
+  goalTargetSeconds: number | null;
+  /** Seconds over your own goal target; negative means inside it. */
+  goalGapSeconds: number | null;
   estimated: boolean;
+  /** Measured, or estimated from the goal finish or the target pace. */
+  source: EstimateSource;
 }
 
 export interface RacePlan {
@@ -49,6 +58,8 @@ export interface RacePlan {
   /** Set when a goal time was given: the pace that goal actually requires. */
   goalFinishSec: number | null;
   goalPaceSec: number | null;
+  /** How far the plan overruns the goal; 0 when it fits. */
+  goalOverrunSec: number;
   /**
    * Seconds per kilometre the plan can afford to start faster than target:
    * zero, always. Opening more than 15 s/km fast costs about 6 minutes over
@@ -63,6 +74,8 @@ export interface RacePlanInput {
   /** Target finish in seconds, when the athlete has one. */
   goalFinishSec?: number | null;
   transitionSec?: number;
+  /** Pre-computed estimates, when the caller already has them. */
+  estimates?: Record<Station, StationEstimate>;
 }
 
 /**
@@ -83,17 +96,42 @@ export function buildRacePlan(input: RacePlanInput): RacePlan {
   }));
   const runTotalSec = targetPaceSec * RUN_COUNT;
 
+  // The same estimates the rest of the app works from, so an untested station
+  // reads the same number here as it does in the stations tab.
+  const estimates =
+    input.estimates ??
+    estimateStations({
+      targetPaceSec,
+      goalFinishSec: input.goalFinishSec,
+      benchmarks: input.benchmarks,
+      transitionSec,
+      runCount: RUN_COUNT,
+    });
+
+  // What the goal leaves each station - including the measured ones, so your
+  // own time has something to be judged against.
+  const goal = goalStationTargets({
+    targetPaceSec,
+    goalFinishSec: input.goalFinishSec,
+    benchmarks: input.benchmarks,
+    transitionSec,
+    runCount: RUN_COUNT,
+  });
+
   const stations: StationTarget[] = STATIONS.map((station) => {
-    const mark = input.benchmarks?.[station];
-    const seconds =
-      mark && Number.isFinite(mark.seconds) ? Math.round(mark.seconds) : STATION_REFERENCE[station].avg;
+    const estimate = estimates[station];
+    const seconds = Math.round(estimate.seconds);
     const targetSeconds = stationP25(station);
+    const goalTargetSeconds = goal ? goal.targets[station] : null;
     return {
       station,
       seconds,
       targetSeconds,
       secondsAvailable: seconds - targetSeconds,
-      estimated: !mark,
+      goalTargetSeconds,
+      goalGapSeconds: goalTargetSeconds === null ? null : seconds - goalTargetSeconds,
+      estimated: estimate.source !== 'benchmark',
+      source: estimate.source,
     };
   });
 
@@ -125,6 +163,7 @@ export function buildRacePlan(input: RacePlanInput): RacePlan {
     predictedFinishSec,
     goalFinishSec,
     goalPaceSec,
+    goalOverrunSec: goal ? goal.overrunSec : 0,
     openingAllowanceSec: 0,
   };
 }

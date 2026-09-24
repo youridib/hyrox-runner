@@ -1,7 +1,7 @@
 import type { JSX } from 'preact';
 import { useState } from 'preact/hooks';
 import { dayOfMonth, monthIndex } from '../domain/dates';
-import { MAX_PACE_SEC, MIN_PACE_SEC, formatPace } from '../domain/zones';
+import { MAX_PACE_SEC, MIN_PACE_SEC } from '../domain/zones';
 import type { PlannedDay, PlannedWeek, SessionType } from '../domain/types';
 import { SESSION_TYPES } from '../domain/types';
 import { renderSession, type Dict } from '../i18n';
@@ -13,55 +13,92 @@ export const shortDate = (iso: string, dict: Dict): string =>
   `${dayOfMonth(iso)} ${dict.months[monthIndex(iso)]}`;
 
 /**
- * Parses `m:ss`, `mm:ss` or a bare number of seconds. Returns null for
- * anything that is not a time, so a half-typed field clears the value rather
- * than storing a guess.
- *
- * Strict on purpose: `1:05:30`, `-1:30` and `0:00` are all not a duration
- * this field can mean, and storing any of them would put a value in state
- * that the schema layer throws away on the next load - the plan would then
- * change under the user on a refresh they did not ask for.
+ * Two numeric fields for a duration, because a single `m:ss` text box asks
+ * for a colon that a phone's numeric keypad does not have - which left the
+ * field accepting whole minutes and nothing else.
  */
-export function parseMmSs(raw: string): number | null {
-  if (!raw) return null;
-  const parts = raw.split(':');
-  if (parts.length > 2) return null;
-
-  if (parts.length === 2) {
-    if (!/^\d+$/.test(parts[0] as string) || !/^\d{1,2}$/.test(parts[1] as string)) return null;
-    const m = Number.parseInt(parts[0] as string, 10);
-    const s = Number.parseInt(parts[1] as string, 10);
-    if (s > 59) return null;
-    const total = m * 60 + s;
-    return total > 0 ? total : null;
-  }
-
-  if (!/^\d+$/.test(raw)) return null;
-  const seconds = Number.parseInt(raw, 10);
-  return seconds > 0 ? seconds : null;
+export interface TimeFieldProps {
+  id: string;
+  /** Current value in seconds, or null when nothing is set. */
+  value: number | null;
+  /** Shown greyed when there is no value: the estimate this row is using. */
+  placeholder: number | null;
+  leftLabel: string;
+  rightLabel: string;
+  /** Left field is hours when true, minutes otherwise. */
+  hours?: boolean;
+  onCommit: (seconds: number | null) => void;
 }
 
-/**
- * Parses a goal finish written as `h:mm` or `h:mm:ss` - the way a Hyrox
- * athlete says it. Two parts are hours and minutes, not minutes and seconds,
- * because that is what the field asks for and `1:25` means 1:25:00 to
- * everyone who races this.
- */
-export function parseGoalFinish(raw: string, min = 1800, max = 5 * 3600): number | null {
-  if (!raw) return null;
-  const parts = raw.split(':');
-  if (parts.length < 2 || parts.length > 3) return null;
-  if (!parts.every((part) => /^\d+$/.test(part))) return null;
+const split = (seconds: number | null, hours: boolean): [string, string] => {
+  if (seconds === null) return ['', ''];
+  const unit = hours ? 3600 : 60;
+  const left = Math.floor(seconds / unit);
+  const right = hours ? Math.round((seconds % 3600) / 60) : Math.round(seconds % 60);
+  return [String(left), String(right).padStart(2, '0')];
+};
 
-  const numbers = parts.map((part) => Number.parseInt(part, 10));
-  const seconds =
-    numbers.length === 3
-      ? (numbers[0] as number) * 3600 + (numbers[1] as number) * 60 + (numbers[2] as number)
-      : (numbers[0] as number) * 3600 + (numbers[1] as number) * 60;
+export function TimeField({
+  id, value, placeholder, leftLabel, rightLabel, hours = false, onCommit,
+}: TimeFieldProps): JSX.Element {
+  const [committed, setCommitted] = useState(value);
+  const [draft, setDraft] = useState(() => split(value, hours));
 
-  if ((numbers[1] as number) > 59) return null;
-  if (numbers.length === 3 && (numbers[2] as number) > 59) return null;
-  return seconds >= min && seconds <= max ? seconds : null;
+  // Follow the store when it changes underneath us, but never while the user
+  // is mid-edit: that is what used to eat keystrokes in the pace field.
+  if (value !== committed) {
+    setCommitted(value);
+    setDraft(split(value, hours));
+  }
+
+  const commit = () => {
+    const [left, right] = draft;
+    if (left.trim() === '' && right.trim() === '') {
+      onCommit(null);
+      return;
+    }
+    const unit = hours ? 3600 : 60;
+    const l = Math.max(0, Number.parseInt(left, 10) || 0);
+    const r = Math.min(59, Math.max(0, Number.parseInt(right, 10) || 0));
+    const seconds = l * unit + r * (hours ? 60 : 1);
+    onCommit(seconds > 0 ? seconds : null);
+  };
+
+  const [placeLeft, placeRight] = split(placeholder, hours);
+
+  return (
+    <div class="time-field">
+      <input
+        type="number"
+        class="time-input"
+        id={`${id}-left`}
+        inputMode="numeric"
+        min={0}
+        max={hours ? 9 : 59}
+        step={1}
+        aria-label={leftLabel}
+        placeholder={placeLeft || '0'}
+        value={draft[0]}
+        onInput={(e) => setDraft([(e.target as HTMLInputElement).value, draft[1]])}
+        onBlur={commit}
+      />
+      <span class="time-sep">:</span>
+      <input
+        type="number"
+        class="time-input"
+        id={`${id}-right`}
+        inputMode="numeric"
+        min={0}
+        max={59}
+        step={hours ? 1 : 5}
+        aria-label={rightLabel}
+        placeholder={placeRight || '00'}
+        value={draft[1]}
+        onInput={(e) => setDraft([draft[0], (e.target as HTMLInputElement).value])}
+        onBlur={commit}
+      />
+    </div>
+  );
 }
 
 export const IconGear = () => (
@@ -117,7 +154,7 @@ export interface LogPanelProps {
   onChange: (next: LogEntry | null) => void;
 }
 
-export function LogPanel({ entry, dict, askForSplit, onChange }: LogPanelProps): JSX.Element {
+export function LogPanel({ date, entry, dict, askForSplit, onChange }: LogPanelProps): JSX.Element {
   const done = entry?.done ?? false;
   return (
     <div class="log-block">
@@ -159,26 +196,19 @@ export function LogPanel({ entry, dict, askForSplit, onChange }: LogPanelProps):
           {askForSplit && (
             <>
               <div class="log-label" style="margin-top:16px;">{dict.splitLabel}</div>
-              <input
-                class="split-input"
-                type="text"
-                inputMode="numeric"
-                placeholder="m:ss"
-                aria-label={dict.splitLabel}
-                value={entry?.splitSec === undefined ? '' : formatPace(entry.splitSec)}
-                onBlur={(e) => {
-                  const raw = (e.target as HTMLInputElement).value.trim();
-                  const seconds = parseMmSs(raw);
+              <TimeField
+                id={`split-${date}`}
+                value={entry?.splitSec ?? null}
+                placeholder={null}
+                leftLabel={dict.minutesLabel}
+                rightLabel={dict.secondsLabel}
+                onCommit={(seconds) => {
                   // A split outside human 1 km range is a typo. Storing it
                   // would drag the station penalty around until the next
                   // reload threw it away again.
                   const usable =
                     seconds !== null && seconds >= MIN_PACE_SEC && seconds <= MAX_PACE_SEC;
-                  onChange({
-                    ...entry,
-                    done: true,
-                    splitSec: usable ? (seconds as number) : undefined,
-                  });
+                  onChange({ ...entry, done: true, splitSec: usable ? seconds : undefined });
                 }}
               />
               <div class="section-hint">{dict.splitHint}</div>

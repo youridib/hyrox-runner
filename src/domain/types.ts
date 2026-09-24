@@ -223,4 +223,6 @@ export interface PlanConfig {
   stationBenchmarks?: Partial<Record<Station, StationBenchmark>>;
   division?: Division;
   sex?: Sex;
+  /** Goal finish in seconds. Seeds the untested station times when set. */
+  goalFinishSec?: number | null;
 }

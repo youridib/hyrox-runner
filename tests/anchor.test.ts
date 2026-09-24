@@ -12,7 +12,6 @@ import {
   stationDecay,
 } from '../src/domain/zones';
 import { buildRacePlan } from '../src/domain/racePlan';
-import { parseGoalFinish, parseMmSs } from '../src/ui/components';
 import { STATIONS, type TimeTrial } from '../src/domain/types';
 
 describe('criticalSpeed', () => {
@@ -204,34 +203,53 @@ describe('formatClock', () => {
   });
 });
 
-describe('time entry never stores what the schema will throw away', () => {
-  it('parses m:ss and rejects everything that is not a duration', () => {
-    expect(parseMmSs('5:30')).toBe(330);
-    expect(parseMmSs('12:05')).toBe(725);
-    expect(parseMmSs('330')).toBe(330);
-    // Each of these used to slip through and be stored.
-    expect(parseMmSs('0:00')).toBeNull();
-    expect(parseMmSs('-1:30')).toBeNull();
-    expect(parseMmSs('1:05:30')).toBeNull();
-    expect(parseMmSs('5:75')).toBeNull();
-    expect(parseMmSs('abc')).toBeNull();
-    expect(parseMmSs('')).toBeNull();
-    expect(parseMmSs('5:')).toBeNull();
+describe('the race plan against a goal', () => {
+  const zones = computeZones({ csPaceSec: 300, decaySec: 30, source: 'twoPoint' });
+
+  it('carries a goal target for every station, measured ones included', () => {
+    const plan = buildRacePlan({
+      zones,
+      goalFinishSec: 5100,
+      benchmarks: { wallBalls: { seconds: 425, testedOn: '2026-07-01' } },
+    });
+    for (const station of plan.stations) {
+      expect(station.goalTargetSeconds, station.station).not.toBeNull();
+      expect(station.goalGapSeconds, station.station).toBe(
+        station.seconds - (station.goalTargetSeconds as number),
+      );
+    }
+    // A measured station is judged against what the goal wanted there.
+    const wallBalls = plan.stations.find((s) => s.station === 'wallBalls')!;
+    expect(wallBalls.seconds).toBe(425);
+    expect(wallBalls.goalGapSeconds).toBeGreaterThan(0);
   });
 
-  it('reads a goal finish as hours and minutes, the way the field asks for it', () => {
-    // 1:25 is 1:25:00 to everyone who races this, not 85 seconds.
-    expect(parseGoalFinish('1:25')).toBe(5100);
-    expect(parseGoalFinish('1:25:30')).toBe(5130);
-    expect(parseGoalFinish('0:55')).toBe(3300);
+  it('reports no overrun while the plan still fits the goal', () => {
+    const plan = buildRacePlan({ zones, goalFinishSec: 5100 });
+    expect(plan.goalOverrunSec).toBe(0);
+    expect(Math.abs(plan.predictedFinishSec - 5100)).toBeLessThan(15);
   });
 
-  it('refuses a goal outside the range the schema will keep', () => {
-    expect(parseGoalFinish('0:10')).toBeNull(); // 10 min: not a Hyrox finish
-    expect(parseGoalFinish('9:00')).toBeNull(); // 9 hours
-    expect(parseGoalFinish('1:99')).toBeNull();
-    expect(parseGoalFinish('-1:00')).toBeNull();
-    expect(parseGoalFinish('90')).toBeNull();
-    expect(parseGoalFinish('')).toBeNull();
+  it('reports the overrun once measured stations break the goal', () => {
+    const plan = buildRacePlan({
+      zones,
+      goalFinishSec: 5100,
+      benchmarks: {
+        wallBalls: { seconds: 900, testedOn: '2026-07-01' },
+        sledPull: { seconds: 900, testedOn: '2026-07-01' },
+        burpeeBroadJump: { seconds: 900, testedOn: '2026-07-01' },
+      },
+    });
+    expect(plan.goalOverrunSec).toBeGreaterThan(0);
+    expect(plan.predictedFinishSec).toBeGreaterThan(5100);
+  });
+
+  it('leaves the goal fields empty when no goal is set', () => {
+    const plan = buildRacePlan({ zones });
+    for (const station of plan.stations) {
+      expect(station.goalTargetSeconds).toBeNull();
+      expect(station.goalGapSeconds).toBeNull();
+    }
+    expect(plan.goalOverrunSec).toBe(0);
   });
 });

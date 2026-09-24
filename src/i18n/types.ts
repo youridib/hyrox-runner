@@ -177,6 +177,26 @@ export interface Dict {
   ttEmpty: string;
   ttEntry: (meters: number, time: string, date: string) => string;
   ttRemove: string;
+  /** The stations tab. */
+  tabStations: string;
+  stationsTitle: string;
+  stationsHint: string;
+  stationsFooterHint: string;
+  stationsTestedLabel: (tested: number, total: number) => string;
+  stationTotalLabel: string;
+  requiredFinish: string;
+  goalShort: string;
+  fieldShort: string;
+  goalOverBy: string;
+  goalOverrunHint: (pace: string) => string;
+  estimateFromGoal: string;
+  estimateFromPace: (pace: string) => string;
+  estimateAllMeasured: string;
+  clearBenchmark: string;
+  minutesLabel: string;
+  secondsLabel: string;
+  goalHoursLabel: string;
+  goalMinutesLabel: string;
   /** Station benchmarks. */
   benchmarksTitle: string;
   benchmarksHint: string;

@@ -8,7 +8,7 @@ screen, works fully offline.
 ```bash
 npm install
 npm run dev        # local dev server
-npm test           # 316 tests
+npm test           # 355 tests
 npm run build      # typecheck + production build into dist/
 npm run preview    # serve the built site
 ```
@@ -112,10 +112,14 @@ goes stale.
 Running is 52% of an average finish; the stations are 40% and the roxzone 8%.
 The planner does not prescribe lifting, but it does measure the stations:
 
-- **Station benchmarks** (Settings) are ranked against the population 25th
-  percentile in *seconds available*, not percentage behind - which is what
+- **Station benchmarks** (the Stations tab) are ranked against the population
+  25th percentile in *seconds available*, not percentage behind - which is what
   keeps the app pointed at wall balls (5:15 of spread) rather than the SkiErg
-  (1:19).
+  (1:19). Anything untested is estimated rather than blank: with a goal finish
+  the stations get what the goal leaves once the runs and roxzone are paid for,
+  split by each station's share of the population total; without one the
+  population averages are scaled to your own target pace, damped because
+  running ability only partly transfers to the stations.
 - **Compromised runs are built from that ranking**: your two worst stations in
   every block, the rest rotating, always in race order, at doses rendered from
   your division and category. They start at low dose from mid-build rather
@@ -124,7 +128,7 @@ The planner does not prescribe lifting, but it does measure the stations:
   next station up first, count the transition - and budgeted in the race plan
   at 8 x 40 s. Top quartile to bottom quartile is 2:16 of free time.
 
-### The four tabs
+### The five tabs
 
 - **Today** is read-only: the session, and practical notes on how to execute it
   well. Nothing to tap, so it works as a glance before you train.
@@ -133,6 +137,20 @@ The planner does not prescribe lifting, but it does measure the stations:
   above 30% - Hyrox days count as hard there, because the stations peak higher
   on lactate than the runs do.
 - **Block** is every week from the block start to race day.
+- **Stations** is where the other 40% of the race is scored: one row per
+  station, ranked worst first by seconds available against the population 25th
+  percentile. Times are entered as separate minute and second fields - a phone
+  numeric keypad has no colon - and every untested station still shows a
+  number, from your goal finish when you have set one and from your target
+  pace otherwise. The goal itself is set here, in hours and minutes.
+
+  With a goal, each station also carries its own goal target: the goal, minus
+  your runs and the roxzone, split by that station's share of the population
+  station total - so if wall balls are 17% of the average station time, they
+  get 17% of your budget. Measure one and its time is spent first; the rest
+  re-split what is left, so the plan keeps adding up to the goal. When your
+  measured times no longer fit, the total goes red and says by how much
+  rather than quietly relaxing the goal.
 - **Race** is the race plan: predicted finish, a flat eight-run split schedule,
   your station times against the population target, a roxzone budget and the
   pre-race protocol.

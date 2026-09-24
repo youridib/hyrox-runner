@@ -1,13 +1,12 @@
 import type { JSX } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { formatClock, formatPace } from '../domain/zones';
-import { daysBetween, todayISO } from '../domain/dates';
-import { BENCHMARK_STALE_DAYS, STATION_REFERENCE } from '../domain/stations';
-import { DIVISIONS, SEXES, STATIONS, type Division, type Sex } from '../domain/types';
+import { todayISO } from '../domain/dates';
+import { DIVISIONS, SEXES, type Division, type Sex } from '../domain/types';
 import type { Dict } from '../i18n';
 import { parseImport, type AppState } from '../state/schema';
 import { store } from '../state/store';
-import { IconClose, parseGoalFinish, parseMmSs, shortDate } from './components';
+import { IconClose, TimeField, shortDate } from './components';
 
 export interface SettingsDrawerProps {
   state: AppState;
@@ -24,7 +23,7 @@ export function SettingsDrawer({ state, dict, onClose, onToast }: SettingsDrawer
   const [paceMin, setPaceMin] = useState(String(Math.floor(state.currentPaceSec / 60)));
   const [paceSec, setPaceSec] = useState(String(state.currentPaceSec % 60).padStart(2, '0'));
   const [ttMeters, setTtMeters] = useState('');
-  const [ttTime, setTtTime] = useState('');
+  const [ttTime, setTtTime] = useState<number | null>(null);
 
   const today = todayISO();
 
@@ -35,7 +34,7 @@ export function SettingsDrawer({ state, dict, onClose, onToast }: SettingsDrawer
    */
   const addTimeTrial = () => {
     const meters = Number.parseInt(ttMeters, 10);
-    const seconds = parseMmSs(ttTime.trim());
+    const seconds = ttTime;
     // The same bounds the schema enforces on read. Accepting anything wider
     // here would store a trial that quietly vanishes on the next load.
     if (!Number.isFinite(meters) || meters < 400 || meters > 21_100) return;
@@ -44,29 +43,7 @@ export function SettingsDrawer({ state, dict, onClose, onToast }: SettingsDrawer
       timeTrials: [{ date: today, meters, seconds }, ...state.timeTrials].slice(0, 12),
     });
     setTtMeters('');
-    setTtTime('');
-  };
-
-  /**
-   * An empty field clears the benchmark rather than storing a zero.
-   *
-   * A blur with the value unchanged writes nothing at all: this fires on every
-   * focus loss, and re-dating an untouched benchmark would silently reset its
-   * six-week staleness clock just because the user tabbed past it.
-   */
-  const setBenchmark = (station: (typeof STATIONS)[number], raw: string) => {
-    const existing = state.stationBenchmarks[station];
-    const seconds = parseMmSs(raw.trim());
-    if (seconds !== null && seconds === existing?.seconds) return;
-    if (seconds === null && existing === undefined) return;
-
-    const benchmarks = { ...state.stationBenchmarks };
-    // Out-of-range times are a typo, not a measurement; the schema drops them
-    // on read, so they must not reach the store either.
-    if (seconds === null) delete benchmarks[station];
-    else if (seconds < 30 || seconds > 3600) return;
-    else benchmarks[station] = { seconds, testedOn: today };
-    store.update({ stationBenchmarks: benchmarks });
+    setTtTime(null);
   };
 
   useEffect(() => {
@@ -206,13 +183,13 @@ export function SettingsDrawer({ state, dict, onClose, onToast }: SettingsDrawer
               value={ttMeters}
               onInput={(e) => setTtMeters((e.target as HTMLInputElement).value)}
             />
-            <input
-              type="text" class="pace-input wide" id="tt-time-input"
-              inputMode="numeric"
-              aria-label={dict.ttTimeLabel}
-              placeholder="4:30"
+            <TimeField
+              id="tt-time"
               value={ttTime}
-              onInput={(e) => setTtTime((e.target as HTMLInputElement).value)}
+              placeholder={null}
+              leftLabel={dict.minutesLabel}
+              rightLabel={dict.secondsLabel}
+              onCommit={setTtTime}
             />
             <button type="button" class="data-btn" onClick={addTimeTrial}>{dict.ttAddBtn}</button>
           </div>
@@ -266,54 +243,6 @@ export function SettingsDrawer({ state, dict, onClose, onToast }: SettingsDrawer
               </button>
             ))}
           </div>
-        </div>
-
-        <div class="setting-group">
-          <label class="setting-label" for="goal-finish-input">{dict.goalFinishSetting}</label>
-          <input
-            type="text"
-            class="date-input"
-            id="goal-finish-input"
-            inputMode="numeric"
-            placeholder={dict.goalFinishNone}
-            value={state.goalFinishSec === null ? '' : formatClock(state.goalFinishSec)}
-            onBlur={(e) => {
-              // `1:25` is 1:25:00, the way the field asks for it and the way
-              // the time is said out loud - not 85 seconds.
-              store.update({
-                goalFinishSec: parseGoalFinish((e.target as HTMLInputElement).value.trim()),
-              });
-            }}
-          />
-          <div class="setting-hint">{dict.goalFinishHint}</div>
-        </div>
-
-        <div class="setting-group">
-          <label class="setting-label">{dict.benchmarksTitle}</label>
-          <div class="benchmark-list">
-            {STATIONS.map((station) => {
-              const mark = state.stationBenchmarks[station];
-              const stale = mark ? daysBetween(mark.testedOn, today) > BENCHMARK_STALE_DAYS : false;
-              return (
-                <div class="benchmark-row" key={station}>
-                  <label class="benchmark-label" for={`bm-${station}`}>
-                    {dict.stations[station]}
-                    {stale && <span class="benchmark-stale">{dict.benchmarkStale}</span>}
-                  </label>
-                  <input
-                    type="text"
-                    class="benchmark-input"
-                    id={`bm-${station}`}
-                    inputMode="numeric"
-                    placeholder={formatPace(STATION_REFERENCE[station].avg)}
-                    value={mark ? formatPace(mark.seconds) : ''}
-                    onBlur={(e) => setBenchmark(station, (e.target as HTMLInputElement).value)}
-                  />
-                </div>
-              );
-            })}
-          </div>
-          <div class="setting-hint">{dict.benchmarksHint}</div>
         </div>
 
         <div class="setting-group">

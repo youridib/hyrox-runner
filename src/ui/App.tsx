@@ -11,10 +11,19 @@ import { useAppState, useDict, usePlan, useToast, useToday } from './hooks';
 import { computeStats } from './stats';
 import { BlockWeekCard, DayRow, IconGear, TodayCard, shortDate } from './components';
 import { SettingsDrawer } from './SettingsDrawer';
+import { StationsTab } from './StationsTab';
 import type { Dict } from '../i18n';
 import { getTips } from '../i18n/tips';
 
-type Tab = 'today' | 'week' | 'block' | 'race';
+type Tab = 'today' | 'week' | 'block' | 'stations' | 'race';
+
+const TAB_LABELS: Record<Tab, (dict: Dict) => string> = {
+  today: (d) => d.tabToday,
+  week: (d) => d.tabWeek,
+  block: (d) => d.tabBlock,
+  stations: (d) => d.tabStations,
+  race: (d) => d.tabRace,
+};
 
 export function App(): JSX.Element {
   const state = useAppState();
@@ -47,8 +56,9 @@ export function App(): JSX.Element {
         zones: plan.zones,
         benchmarks: state.stationBenchmarks,
         goalFinishSec: state.goalFinishSec,
+        estimates: plan.stationEstimates,
       }),
-    [plan.zones, state.stationBenchmarks, state.goalFinishSec],
+    [plan.zones, plan.stationEstimates, state.stationBenchmarks, state.goalFinishSec],
   );
 
   /** Changes one date, or the recurring template from now on. */
@@ -108,7 +118,7 @@ export function App(): JSX.Element {
         <PhaseHero plan={plan} dict={dict} />
 
         <nav class="tabs" role="tablist">
-          {(['today', 'week', 'block', 'race'] as const).map((key) => (
+          {(['today', 'week', 'block', 'stations', 'race'] as const).map((key) => (
             <button
               type="button"
               key={key}
@@ -117,13 +127,7 @@ export function App(): JSX.Element {
               class={`tab${tab === key ? ' active' : ''}`}
               onClick={() => setTab(key)}
             >
-              {key === 'today'
-                ? dict.tabToday
-                : key === 'week'
-                  ? dict.tabWeek
-                  : key === 'block'
-                    ? dict.tabBlock
-                    : dict.tabRace}
+              {TAB_LABELS[key](dict)}
             </button>
           ))}
         </nav>
@@ -156,6 +160,10 @@ export function App(): JSX.Element {
             <IntensityStrip week={currentWeek} dict={dict} />
             <div class="week-list">{currentWeek.days.map(renderDay)}</div>
           </section>
+        )}
+
+        {tab === 'stations' && (
+          <StationsTab plan={plan} racePlan={racePlan} state={state} dict={dict} />
         )}
 
         {tab === 'race' && <RacePlanCard plan={racePlan} dict={dict} />}

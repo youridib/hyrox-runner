@@ -32,7 +32,7 @@ describe('first render', () => {
   it('renders the shell without throwing', () => {
     render(<App />);
     expect(screen.getByText('Hyrox Runner')).toBeTruthy();
-    expect(document.querySelectorAll('.tab')).toHaveLength(4);
+    expect(document.querySelectorAll('.tab')).toHaveLength(5);
   });
 
   it('shows today with a real session, not a placeholder', () => {
@@ -114,7 +114,7 @@ describe('today tab is read-only', () => {
 });
 
 describe('tabs', () => {
-  it('switches between today, week, block and race', () => {
+  it('switches between today, week, block, stations and race', () => {
     render(<App />);
     const tabs = Array.from(document.querySelectorAll('.tab')) as HTMLElement[];
 
@@ -125,6 +125,9 @@ describe('tabs', () => {
     expect(document.querySelectorAll('.block-week').length).toBeGreaterThan(4);
 
     fireEvent.click(tabs[3]!);
+    expect(document.querySelector('.stations-tab')).toBeTruthy();
+
+    fireEvent.click(tabs[4]!);
     expect(document.querySelector('.race-plan')).toBeTruthy();
 
     fireEvent.click(tabs[0]!);
@@ -394,7 +397,7 @@ describe('storage failure', () => {
 describe('race plan tab', () => {
   const openRaceTab = () => {
     render(<App />);
-    fireEvent.click(document.querySelectorAll('.tab')[3]!);
+    fireEvent.click(document.querySelectorAll('.tab')[4]!);
   };
 
   it('shows a predicted finish, eight runs and eight stations', () => {
@@ -435,26 +438,46 @@ describe('race plan tab', () => {
   });
 });
 
+/** Opens the stations tab, where benchmarks and the goal finish now live. */
+const openStations = () => {
+  render(<App />);
+  fireEvent.click(document.querySelectorAll('.tab')[3]!);
+};
+
+/** Types into a two-field time control and commits it. */
+const setTime = (id: string, left: string, right: string) => {
+  const leftInput = document.getElementById(`${id}-left`) as HTMLInputElement;
+  const rightInput = document.getElementById(`${id}-right`) as HTMLInputElement;
+  fireEvent.input(leftInput, { target: { value: left } });
+  fireEvent.input(rightInput, { target: { value: right } });
+  fireEvent.blur(rightInput);
+};
+
 describe('measuring the other 48%', () => {
   const openSettings = () => {
     render(<App />);
     fireEvent.click(document.querySelector('.settings-btn')!);
   };
 
-  it('stores a station benchmark typed as m:ss', () => {
-    openSettings();
-    const input = document.getElementById('bm-wallBalls') as HTMLInputElement;
-    fireEvent.blur(input, { target: { value: '5:30' } });
+  it('stores a station benchmark entered as minutes and seconds', () => {
+    openStations();
+    setTime('bm-wallBalls', '5', '30');
     expect(store.get().stationBenchmarks.wallBalls!.seconds).toBe(330);
     expect(store.get().stationBenchmarks.wallBalls!.testedOn).toBe(TODAY);
   });
 
-  it('clears a benchmark when the field is emptied', () => {
+  it('takes seconds on their own, which the old single m:ss field could not', () => {
+    // The point of two fields: a phone numeric keypad has no colon, so the
+    // old text box left you able to type whole minutes and nothing else.
+    openStations();
+    setTime('bm-row', '4', '45');
+    expect(store.get().stationBenchmarks.row!.seconds).toBe(285);
+  });
+
+  it('clears a benchmark when both fields are emptied', () => {
     reset({ stationBenchmarks: { row: { seconds: 300, testedOn: TODAY } } });
-    openSettings();
-    fireEvent.blur(document.getElementById('bm-row') as HTMLInputElement, {
-      target: { value: '' },
-    });
+    openStations();
+    setTime('bm-row', '', '');
     expect(store.get().stationBenchmarks.row).toBeUndefined();
   });
 
@@ -464,9 +487,7 @@ describe('measuring the other 48%', () => {
     fireEvent.input(document.getElementById('tt-meters-input') as HTMLInputElement, {
       target: { value: '1200' },
     });
-    fireEvent.input(document.getElementById('tt-time-input') as HTMLInputElement, {
-      target: { value: '4:10' },
-    });
+    setTime('tt-time', '4', '10');
     fireEvent.click(screen.getByText('Add time trial'));
 
     expect(store.get().timeTrials).toHaveLength(2);
@@ -505,9 +526,10 @@ describe('measuring the other 48%', () => {
       fireEvent.click(header);
       const doneBtn = document.querySelector('.done-btn');
       if (doneBtn) fireEvent.click(doneBtn);
-      const split = document.querySelector('.split-input') as HTMLInputElement | null;
+      const split = document.querySelector('[id^="split-"]') as HTMLInputElement | null;
       if (split) {
-        fireEvent.blur(split, { target: { value: '5:40' } });
+        const id = split.id.replace(/-(left|right)$/, '');
+        setTime(id, '5', '40');
         found = true;
         break;
       }
@@ -552,39 +574,34 @@ describe('settings inputs never store what a reload would discard', () => {
     // staleness clock without the user changing anything.
     const old = { seconds: 420, testedOn: addDays(TODAY, -60) };
     reset({ stationBenchmarks: { wallBalls: old } });
-    openSettings();
-    const input = document.getElementById('bm-wallBalls') as HTMLInputElement;
-    fireEvent.blur(input, { target: { value: input.value } });
+    openStations();
+    const left = document.getElementById('bm-wallBalls-left') as HTMLInputElement;
+    fireEvent.blur(left);
     expect(store.get().stationBenchmarks.wallBalls).toEqual(old);
   });
 
   it('re-dates a benchmark that actually changed', () => {
     reset({ stationBenchmarks: { wallBalls: { seconds: 420, testedOn: addDays(TODAY, -60) } } });
-    openSettings();
-    fireEvent.blur(document.getElementById('bm-wallBalls') as HTMLInputElement, {
-      target: { value: '6:00' },
-    });
+    openStations();
+    setTime('bm-wallBalls', '6', '0');
     expect(store.get().stationBenchmarks.wallBalls).toEqual({ seconds: 360, testedOn: TODAY });
   });
 
   it('refuses a benchmark that is not a plausible station time', () => {
-    openSettings();
-    for (const value of ['0:00', '99:00', '1:05:30']) {
-      fireEvent.blur(document.getElementById('bm-row') as HTMLInputElement, {
-        target: { value },
-      });
-      expect(store.get().stationBenchmarks.row, value).toBeUndefined();
+    openStations();
+    for (const [m, sec] of [['0', '0'], ['99', '0']]) {
+      setTime('bm-row', m as string, sec as string);
+      expect(store.get().stationBenchmarks.row, m + ':' + sec).toBeUndefined();
     }
   });
 
-  it('reads a goal finish as hours and minutes', () => {
-    openSettings();
-    const input = document.getElementById('goal-finish-input') as HTMLInputElement;
-    fireEvent.blur(input, { target: { value: '1:25' } });
+  it('takes a goal finish as hours and minutes, not one ambiguous box', () => {
+    openStations();
+    setTime('goal-finish', '1', '25');
     expect(store.get().goalFinishSec).toBe(5100);
 
     // And refuses one the schema would drop on the next load.
-    fireEvent.blur(input, { target: { value: '0:10' } });
+    setTime('goal-finish', '0', '10');
     expect(store.get().goalFinishSec).toBeNull();
   });
 
@@ -593,10 +610,167 @@ describe('settings inputs never store what a reload would discard', () => {
     fireEvent.input(document.getElementById('tt-meters-input') as HTMLInputElement, {
       target: { value: '50000' },
     });
-    fireEvent.input(document.getElementById('tt-time-input') as HTMLInputElement, {
-      target: { value: '4:10' },
-    });
+    setTime('tt-time', '4', '10');
     fireEvent.click(screen.getByText('Add time trial'));
     expect(store.get().timeTrials).toHaveLength(0);
+  });
+});
+
+describe('stations tab', () => {
+  it('scores all eight stations, worst first', () => {
+    openStations();
+    const rows = Array.from(document.querySelectorAll('.station-row'));
+    expect(rows).toHaveLength(8);
+
+    const gaps = rows.map((row) => row.querySelector('.station-gap')!.textContent ?? '');
+    // Worst first: every row is at least as far behind as the one under it.
+    const toSeconds = (text: string) => {
+      const [m, s] = text.replace(/[+−]/g, '').split(':');
+      const value = Number(m) * 60 + Number(s);
+      return text.startsWith('−') ? -value : value;
+    };
+    const values = gaps.map(toSeconds);
+    for (let i = 1; i < values.length; i++) {
+      expect(values[i - 1]!).toBeGreaterThanOrEqual(values[i]!);
+    }
+  });
+
+  it('shows an estimate for every untested station rather than a blank', () => {
+    openStations();
+    expect(document.querySelectorAll('.station-name .est')).toHaveLength(8);
+    for (const input of Array.from(document.querySelectorAll('.station-row .time-input'))) {
+      // Empty value, but a placeholder carrying the estimate.
+      expect((input as HTMLInputElement).value).toBe('');
+      expect((input as HTMLInputElement).placeholder.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('bases the estimates on the goal finish when one is set', () => {
+    reset({ goalFinishSec: 5100 });
+    openStations();
+    const hint = document.querySelector('.station-goal .setting-hint')!.textContent ?? '';
+    expect(hint).toContain('goal finish');
+    // The whole plan adds up to the goal it was derived from - and says so
+    // rather than calling it a prediction.
+    const rows = Array.from(document.querySelectorAll('.station-total-row')).map(
+      (row) => row.textContent ?? '',
+    );
+    expect(rows.join(' ')).toContain('Adds up to your goal');
+    expect(rows.join(' ')).toContain('1:25:0');
+  });
+
+  it('falls back to the target pace when no goal is set', () => {
+    reset({ goalFinishSec: null });
+    openStations();
+    expect(document.querySelector('.station-goal .setting-hint')!.textContent).toContain(
+      'target pace',
+    );
+  });
+
+  it('updates the totals as soon as a station is entered', () => {
+    openStations();
+    const before = document.querySelector('.station-total-row .value')!.textContent;
+    setTime('bm-wallBalls', '7', '30');
+    const after = document.querySelector('.station-total-row .value')!.textContent;
+    expect(after).not.toBe(before);
+    expect(document.querySelectorAll('.station-name .est')).toHaveLength(7);
+  });
+
+  it('clears a station with its clear button', () => {
+    reset({ stationBenchmarks: { row: { seconds: 300, testedOn: TODAY } } });
+    openStations();
+    fireEvent.click(document.querySelector('.station-clear')!);
+    expect(store.get().stationBenchmarks.row).toBeUndefined();
+  });
+
+  it('marks a benchmark older than six weeks as stale', () => {
+    reset({ stationBenchmarks: { row: { seconds: 300, testedOn: addDays(TODAY, -60) } } });
+    openStations();
+    expect(document.querySelector('.station-name .stale')).toBeTruthy();
+  });
+
+  it('offers no station fields in settings any more', () => {
+    render(<App />);
+    fireEvent.click(document.querySelector('.settings-btn')!);
+    expect(document.getElementById('bm-wallBalls-left')).toBeNull();
+    expect(document.getElementById('goal-finish-left')).toBeNull();
+  });
+});
+
+describe('stations against a goal finish', () => {
+  const GOAL = 5100; // 1:25:00
+
+  it('shows what the goal needs from every station, next to what the field does', () => {
+    reset({ goalFinishSec: GOAL });
+    openStations();
+    const targets = Array.from(document.querySelectorAll('.station-target'));
+    expect(targets).toHaveLength(8);
+    for (const target of targets) {
+      expect(target.querySelector('.goal')).toBeTruthy();
+      expect(target.querySelector('.field')).toBeTruthy();
+    }
+  });
+
+  it('shows no gap on a station you have not tested yet', () => {
+    // Its time *is* its goal target, so a gap would always read zero.
+    reset({ goalFinishSec: GOAL });
+    openStations();
+    expect(document.querySelectorAll('.station-gap')).toHaveLength(0);
+  });
+
+  it('scores a measured station against its goal target', () => {
+    reset({ goalFinishSec: GOAL });
+    openStations();
+    setTime('bm-wallBalls', '7', '05');
+
+    const rows = Array.from(document.querySelectorAll('.station-row'));
+    // The one station you are behind on sorts to the top and is the only row
+    // carrying a gap.
+    expect(rows[0]!.querySelector('.station-name')!.textContent).toContain('wall balls');
+    expect(document.querySelectorAll('.station-gap')).toHaveLength(1);
+    expect(rows[0]!.querySelector('.station-gap')!.textContent).toMatch(/^\+\d+:\d{2}$/);
+  });
+
+  it('re-splits the remaining budget so the plan still adds up to the goal', () => {
+    reset({ goalFinishSec: GOAL });
+    openStations();
+    const before = document.querySelectorAll('.station-target .goal')[7]!.textContent;
+    setTime('bm-wallBalls', '7', '05');
+    const after = Array.from(document.querySelectorAll('.station-row'))
+      .find((row) => row.querySelector('.station-name')!.textContent!.includes('farmers'))!
+      .querySelector('.station-target .goal')!.textContent;
+
+    // Everything else has to give back what wall balls took.
+    expect(after).not.toBe(before);
+    expect(document.querySelector('.station-overrun')).toBeNull();
+    const totals = Array.from(document.querySelectorAll('.station-total-row'))
+      .map((row) => row.textContent ?? '')
+      .join(' ');
+    expect(totals).toContain('1:2'); // still lands on the goal
+  });
+
+  it('says so in red when the measured stations no longer fit the goal', () => {
+    reset({
+      goalFinishSec: GOAL,
+      stationBenchmarks: {
+        wallBalls: { seconds: 425, testedOn: TODAY },
+        sledPull: { seconds: 480, testedOn: TODAY },
+        burpeeBroadJump: { seconds: 540, testedOn: TODAY },
+      },
+    });
+    openStations();
+    expect(document.querySelector('.station-totals.is-over')).toBeTruthy();
+    expect(document.querySelector('.station-total-row.is-over')!.textContent).toContain('Over your goal by');
+    expect(document.querySelector('.station-overrun')).toBeTruthy();
+  });
+
+  it('goes back to scoring against the field when the goal is cleared', () => {
+    reset({ goalFinishSec: GOAL });
+    openStations();
+    setTime('goal-finish', '', '');
+    expect(store.get().goalFinishSec).toBeNull();
+    // Every row is scored against P25 again, so every row has a gap.
+    expect(document.querySelectorAll('.station-gap')).toHaveLength(8);
+    expect(document.querySelectorAll('.station-target .goal')).toHaveLength(0);
   });
 });

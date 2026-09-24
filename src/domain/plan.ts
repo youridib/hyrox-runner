@@ -8,11 +8,12 @@ import {
 import { weekIntensity } from './intensity';
 import { computeIsDeload, computeWeekInPhase, getPhase } from './phases';
 import { getSessionSpec } from './progression';
-import { rankWeaknesses, type StationGap } from './stations';
+import { estimateStations, rankWeaknesses, type StationEstimate, type StationGap } from './stations';
 import { fillWeek } from './scheduler';
-import { computeZones, resolveAnchor, type PaceAnchor } from './zones';
+import { computeZones, midPace, resolveAnchor, type PaceAnchor } from './zones';
 import type {
   EffectiveType,
+  Station,
   PhaseKey,
   PlanConfig,
   PlannedDay,
@@ -37,6 +38,9 @@ export interface Plan {
   anchor: PaceAnchor;
   /** Station weaknesses, worst first. Drives the compromised-run blocks. */
   weaknesses: StationGap[];
+  /** What each station is expected to take: measured, or estimated from the
+   * goal finish or the target pace. */
+  stationEstimates: Record<Station, StationEstimate>;
   weeks: PlannedWeek[];
   /** Index into `weeks` for the week containing today, or -1 if outside. */
   currentWeekIndex: number;
@@ -72,7 +76,14 @@ export function buildPlan(
     compromisedSplits: config.compromisedSplits,
   });
   const zones = computeZones(anchor);
-  const weaknesses = rankWeaknesses(config.stationBenchmarks);
+  // Untested stations are estimated from the goal finish, or from the
+  // athlete's own target pace, rather than left at the population average.
+  const stationEstimates = estimateStations({
+    targetPaceSec: midPace(zones.target),
+    goalFinishSec: config.goalFinishSec,
+    benchmarks: config.stationBenchmarks,
+  });
+  const weaknesses = rankWeaknesses(config.stationBenchmarks, stationEstimates);
 
   const daysToRace = daysBetween(todayISO, config.raceDate);
   const phase = getPhase(daysToRace);
@@ -215,6 +226,7 @@ export function buildPlan(
     zones,
     anchor,
     weaknesses,
+    stationEstimates,
     weeks,
     currentWeekIndex,
     blockStart,

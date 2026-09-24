@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   BENCHMARK_STALE_DAYS,
+  TRANSITION_TARGET_SEC,
+  estimateStations,
+  goalStationTargets,
   STATION_REFERENCE,
   buildStationBlock,
   chooseStations,
@@ -10,6 +13,7 @@ import {
   stationDose,
   stationP25,
 } from '../src/domain/stations';
+import { computeZones, midPace } from '../src/domain/zones';
 import { STATIONS, type Station, type StationBenchmark } from '../src/domain/types';
 
 const mark = (seconds: number): StationBenchmark => ({ seconds, testedOn: '2026-07-01' });
@@ -163,5 +167,167 @@ describe('choosing a block', () => {
     expect(chooseStations(0, weaknesses, 0)).toHaveLength(1);
     expect(chooseStations(99, weaknesses, 0)).toHaveLength(STATIONS.length);
     expect(chooseStations(3, weaknesses, -7)).toHaveLength(3);
+  });
+});
+
+describe('estimating an untested station', () => {
+  const zones = computeZones(300);
+  const targetPaceSec = midPace(zones.target);
+
+  it('works backwards from a goal finish when there is one', () => {
+    const estimates = estimateStations({ targetPaceSec, goalFinishSec: 5400 });
+    const total = STATIONS.reduce((sum, s) => sum + estimates[s].seconds, 0);
+    // Goal, minus the runs and the roxzone, is what the stations get.
+    const expected = 5400 - targetPaceSec * 8 - TRANSITION_TARGET_SEC * 8;
+    expect(total).toBeGreaterThan(expected - 10);
+    expect(total).toBeLessThan(expected + 10);
+    for (const station of STATIONS) expect(estimates[station].source).toBe('goal');
+  });
+
+  it("splits that budget by each station share of the population total", () => {
+    const estimates = estimateStations({ targetPaceSec, goalFinishSec: 5400 });
+    // Wall balls are the biggest slice of the reference total, farmers the
+    // smallest; a goal cannot change which is which.
+    expect(estimates.wallBalls.seconds).toBeGreaterThan(estimates.farmers.seconds);
+    expect(estimates.wallBalls.seconds).toBeGreaterThan(estimates.sledPush.seconds);
+  });
+
+  it('falls back to pace when no goal is set, scaled to the athlete', () => {
+    const fast = estimateStations({ targetPaceSec: 240 });
+    const slow = estimateStations({ targetPaceSec: 420 });
+    expect(fast.wallBalls.source).toBe('pace');
+    // Running ability transfers, but only partly - never one for one.
+    expect(fast.wallBalls.seconds).toBeLessThan(STATION_REFERENCE.wallBalls.avg);
+    expect(slow.wallBalls.seconds).toBeGreaterThan(STATION_REFERENCE.wallBalls.avg);
+    const paceRatio = 240 / 420;
+    const stationRatio = fast.wallBalls.seconds / slow.wallBalls.seconds;
+    expect(stationRatio).toBeGreaterThan(paceRatio);
+    expect(stationRatio).toBeLessThan(1);
+  });
+
+  it('keeps a measured station measured, whatever the goal says', () => {
+    const estimates = estimateStations({
+      targetPaceSec,
+      goalFinishSec: 5400,
+      benchmarks: { wallBalls: { seconds: 420, testedOn: '2026-07-01' } },
+    });
+    expect(estimates.wallBalls).toEqual({ station: 'wallBalls', seconds: 420, source: 'benchmark' });
+    expect(estimates.row.source).toBe('goal');
+  });
+
+  it('shows a goal that does not fit as an overrun rather than hiding it', () => {
+    const goal = goalStationTargets({ targetPaceSec, goalFinishSec: 1800 })!;
+    // Every target is floored at the 10th percentile - a very fast station -
+    // and the plan then says by how much the goal is missed.
+    for (const station of STATIONS) {
+      expect(goal.targets[station]).toBeGreaterThanOrEqual(STATION_REFERENCE[station].p10);
+    }
+    expect(goal.overrunSec).toBeGreaterThan(0);
+    // The estimates still come from the goal: no silent revert to the pace
+    // model, which would have hidden the fact that the goal is unreachable.
+    const estimates = estimateStations({ targetPaceSec, goalFinishSec: 1800 });
+    for (const station of STATIONS) expect(estimates[station].source).toBe('goal');
+  });
+
+  it('never returns a non-finite or negative estimate', () => {
+    for (const pace of [0, -50, Number.NaN, 150, 600]) {
+      for (const goal of [null, 0, Number.NaN, 4200, 1e9]) {
+        const estimates = estimateStations({ targetPaceSec: pace, goalFinishSec: goal });
+        for (const station of STATIONS) {
+          expect(Number.isFinite(estimates[station].seconds), `${pace}/${goal}`).toBe(true);
+          expect(estimates[station].seconds).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
+  it('ranks weaknesses against the estimates rather than the population average', () => {
+    // A 1:20 goal makes every untested station a target the athlete is behind
+    // on, and the ranking has to reflect the numbers actually shown.
+    const estimates = estimateStations({ targetPaceSec, goalFinishSec: 4800 });
+    const ranked = rankWeaknesses({}, estimates);
+    for (const gap of ranked) {
+      expect(gap.seconds).toBe(estimates[gap.station].seconds);
+      expect(gap.estimated).toBe(true);
+    }
+  });
+});
+
+describe('station targets from a goal finish', () => {
+  const zones = computeZones(300);
+  const targetPaceSec = midPace(zones.target);
+  const goalFinishSec = 5100; // 1:25:00
+
+  it('gives each station its share of what the goal leaves', () => {
+    const goal = goalStationTargets({ targetPaceSec, goalFinishSec })!;
+    const total = STATIONS.reduce((sum, s) => sum + goal.targets[s], 0);
+    expect(total).toBeGreaterThan(goal.budgetSec - 10);
+    expect(total).toBeLessThan(goal.budgetSec + 10);
+    expect(goal.overrunSec).toBe(0);
+
+    // Share is the station's slice of the population station total: wall
+    // balls are ~17% of it, so they get ~17% of the budget.
+    const referenceTotal = STATIONS.reduce((sum, s) => sum + STATION_REFERENCE[s].avg, 0);
+    for (const station of STATIONS) {
+      const share = STATION_REFERENCE[station].avg / referenceTotal;
+      expect(goal.targets[station] / goal.budgetSec).toBeCloseTo(share, 2);
+    }
+  });
+
+  it('moves with the run pace, because the runs are paid for first', () => {
+    const quick = goalStationTargets({ targetPaceSec: 300, goalFinishSec })!;
+    const slow = goalStationTargets({ targetPaceSec: 360, goalFinishSec })!;
+    // A minute a kilometre slower over 8 km is 8 minutes off the stations.
+    expect(quick.budgetSec - slow.budgetSec).toBe(480);
+    expect(quick.targets.wallBalls).toBeGreaterThan(slow.targets.wallBalls);
+  });
+
+  it('spends a measured station first and re-splits what is left', () => {
+    const before = goalStationTargets({ targetPaceSec, goalFinishSec })!;
+    const after = goalStationTargets({
+      targetPaceSec,
+      goalFinishSec,
+      // Wall balls come in a minute slower than the goal wanted.
+      benchmarks: { wallBalls: { seconds: before.targets.wallBalls + 60, testedOn: '2026-07-01' } },
+    })!;
+
+    // The other stations have to give that minute back between them.
+    expect(after.targets.row).toBeLessThan(before.targets.row);
+    expect(after.targets.sledPull).toBeLessThan(before.targets.sledPull);
+    // And the plan still adds up to the goal.
+    expect(after.overrunSec).toBe(0);
+    expect(after.requiredStationSec).toBeLessThanOrEqual(after.budgetSec + 5);
+  });
+
+  it('still tells a measured station what the goal wanted from it', () => {
+    const goal = goalStationTargets({
+      targetPaceSec,
+      goalFinishSec,
+      benchmarks: { wallBalls: { seconds: 425, testedOn: '2026-07-01' } },
+    })!;
+    // The measured station keeps a target of its own, so 7:05 can be judged
+    // against it rather than against nothing.
+    expect(goal.targets.wallBalls).toBeGreaterThan(0);
+    expect(goal.targets.wallBalls).toBeLessThan(425);
+  });
+
+  it('reports the overrun when measured times eat the whole budget', () => {
+    const goal = goalStationTargets({
+      targetPaceSec,
+      goalFinishSec,
+      benchmarks: {
+        wallBalls: { seconds: 900, testedOn: '2026-07-01' },
+        sledPull: { seconds: 900, testedOn: '2026-07-01' },
+        burpeeBroadJump: { seconds: 900, testedOn: '2026-07-01' },
+      },
+    })!;
+    expect(goal.requiredStationSec).toBeGreaterThan(goal.budgetSec);
+    expect(goal.overrunSec).toBe(goal.requiredStationSec - goal.budgetSec);
+  });
+
+  it('returns nothing at all when no goal is set', () => {
+    expect(goalStationTargets({ targetPaceSec })).toBeNull();
+    expect(goalStationTargets({ targetPaceSec, goalFinishSec: null })).toBeNull();
+    expect(goalStationTargets({ targetPaceSec, goalFinishSec: Number.NaN })).toBeNull();
   });
 });

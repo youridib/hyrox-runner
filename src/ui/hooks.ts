@@ -62,6 +62,7 @@ export function usePlan(state: AppState, today: string): Plan {
           stationBenchmarks: state.stationBenchmarks,
           division: state.division,
           sex: state.sex,
+          goalFinishSec: state.goalFinishSec,
         },
         today,
         { blockStart: state.blockStart },
@@ -78,6 +79,7 @@ export function usePlan(state: AppState, today: string): Plan {
       state.stationBenchmarks,
       state.division,
       state.sex,
+      state.goalFinishSec,
       today,
     ],
   );

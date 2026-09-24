@@ -64,13 +64,203 @@ export const BENCHMARK_STALE_DAYS = 42;
 
 export interface StationGap {
   station: Station;
-  /** The athlete's own time, or the population average when untested. */
+  /** The athlete's own time, or an estimate when untested. */
   seconds: number;
   /** Seconds between this time and the P25 target - the time available. */
   secondsAvailable: number;
-  /** True when no benchmark exists and the population average stood in. */
+  /** True when no benchmark exists and an estimate stood in. */
   estimated: boolean;
 }
+
+/** Where an untested station's number came from. */
+export type EstimateSource = 'benchmark' | 'goal' | 'pace';
+
+export interface StationEstimate {
+  station: Station;
+  seconds: number;
+  source: EstimateSource;
+}
+
+/**
+ * Mean run pace across the 12,479-finisher reference set: 44:24 of running
+ * over 8 km. Used as the pivot for scaling stations to a runner's ability.
+ */
+export const REFERENCE_RUN_PACE_SEC = 333;
+
+/**
+ * How much running ability carries over to the stations.
+ *
+ * Not fully: VO2max and endurance volume correlate with finish time, but grip
+ * strength and muscle mass do not, and wall balls transfer far less than the
+ * ergs do. Half is the honest middle - a runner 10% faster than the reference
+ * is assumed 5% faster at the stations, not 10%.
+ */
+export const PACE_TRANSFER = 0.5;
+
+export interface EstimateInput {
+  /** Flat target pace per kilometre, in seconds. */
+  targetPaceSec: number;
+  /** Goal finish in seconds, when the athlete has set one. */
+  goalFinishSec?: number | null;
+  benchmarks?: Partial<Record<Station, StationBenchmark>>;
+  transitionSec?: number;
+  runCount?: number;
+}
+
+const sum = (values: readonly number[]): number => values.reduce((a, b) => a + b, 0);
+
+/**
+ * The floor a goal-derived target cannot go below.
+ *
+ * The 10th percentile of the field is already a very fast station; a goal
+ * that would demand faster than this from an untested station is a goal that
+ * does not fit, and the honest answer is to say so rather than to print a
+ * time nobody runs.
+ */
+const targetFloor = (station: Station): number => STATION_REFERENCE[station].p10;
+
+/** Slack for the rounding of eight separate targets. */
+const ROUNDING_TOLERANCE_SEC = 8;
+
+export interface GoalTargets {
+  /** Seconds the goal leaves for each station. */
+  targets: Record<Station, number>;
+  /** Total station budget the goal allows, after runs and roxzone. */
+  budgetSec: number;
+  /** What the plan actually adds up to: measured times plus targets. */
+  requiredStationSec: number;
+  /** Seconds the plan overruns the goal by; 0 when it fits. */
+  overrunSec: number;
+}
+
+/**
+ * What a goal finish leaves for each station.
+ *
+ * One rule, applied per station: *what the goal leaves for this station,
+ * given every other station you have already measured*. For an untested
+ * station that is its share of whatever is left after the measured ones are
+ * paid for. For a measured one it is what the goal would have wanted there,
+ * so your own time has something to be judged against.
+ *
+ * Shares come from the population averages: if wall balls are 17% of the
+ * average station total, they get 17% of your budget.
+ *
+ * Targets are floored at the 10th percentile, so an unreachable goal shows up
+ * as an overrun you can see rather than as times nobody runs.
+ */
+export function goalStationTargets(input: EstimateInput): GoalTargets | null {
+  const goal = input.goalFinishSec;
+  if (!goal || !Number.isFinite(goal)) return null;
+
+  const benchmarks = input.benchmarks ?? {};
+  const transitionSec = input.transitionSec ?? TRANSITION_TARGET_SEC;
+  const runCount = input.runCount ?? 8;
+  const targetPaceSec = Number.isFinite(input.targetPaceSec) ? Math.max(0, input.targetPaceSec) : 0;
+
+  const measuredSeconds = (station: Station): number | null => {
+    const mark = benchmarks[station];
+    return mark && Number.isFinite(mark.seconds) ? Math.round(mark.seconds) : null;
+  };
+
+  const budgetSec = goal - targetPaceSec * runCount - transitionSec * TRANSITION_COUNT;
+
+  const targets = {} as Record<Station, number>;
+  for (const station of STATIONS) {
+    // Everything else you have measured is already spent.
+    const spentElsewhere = sum(
+      STATIONS.filter((s) => s !== station).map((s) => measuredSeconds(s) ?? 0),
+    );
+    // The stations still sharing what is left: the untested ones, plus this
+    // one when it is the station being asked about.
+    const sharing = STATIONS.filter((s) => s === station || measuredSeconds(s) === null);
+    const sharingAverage = sum(sharing.map((s) => STATION_REFERENCE[s].avg));
+    const share = sharingAverage > 0 ? STATION_REFERENCE[station].avg / sharingAverage : 0;
+    const remaining = budgetSec - spentElsewhere;
+    targets[station] = Math.max(targetFloor(station), Math.round(remaining * share));
+  }
+
+  const requiredStationSec = sum(
+    STATIONS.map((station) => measuredSeconds(station) ?? targets[station]),
+  );
+
+  // Eight rounded targets can land a second or two either side of the budget.
+  // That is arithmetic, not a goal you are missing, so it is not reported.
+  const overshoot = requiredStationSec - budgetSec;
+  return {
+    targets,
+    budgetSec: Math.round(budgetSec),
+    requiredStationSec,
+    overrunSec: overshoot > ROUNDING_TOLERANCE_SEC ? Math.round(overshoot) : 0,
+  };
+}
+
+/**
+ * What each station should be expected to take, before it has been tested.
+ *
+ * A measured benchmark always wins. For the rest:
+ *
+ * - With a goal finish, the stations get whatever the goal leaves once the
+ *   runs and the roxzone are paid for, split by each station's share of the
+ *   population total. That turns a goal into eight numbers you can chase.
+ * - Without one, the population averages are scaled to the athlete's own
+ *   target pace, damped by `PACE_TRANSFER`.
+ *
+ * Either way every station has a number from the first day, so the weakness
+ * ranking and the race plan mean something before any testing happens.
+ */
+export function estimateStations(input: EstimateInput): Record<Station, StationEstimate> {
+  const benchmarks = input.benchmarks ?? {};
+  const transitionSec = input.transitionSec ?? TRANSITION_TARGET_SEC;
+  const runCount = input.runCount ?? 8;
+  const targetPaceSec = Number.isFinite(input.targetPaceSec) ? input.targetPaceSec : 0;
+
+  const measured = (station: Station): number | null => {
+    const mark = benchmarks[station];
+    return mark && Number.isFinite(mark.seconds) ? Math.round(mark.seconds) : null;
+  };
+
+  // What the goal leaves each station, or null when there is no goal.
+  const goal = goalStationTargets({
+    targetPaceSec,
+    goalFinishSec: input.goalFinishSec,
+    benchmarks,
+    transitionSec,
+    runCount,
+  });
+
+  // Ability scaling for the no-goal case.
+  const ratio = targetPaceSec > 0 ? targetPaceSec / REFERENCE_RUN_PACE_SEC : 1;
+  const scale = Math.min(1.6, Math.max(0.6, 1 + PACE_TRANSFER * (ratio - 1)));
+
+  const out = {} as Record<Station, StationEstimate>;
+  for (const station of STATIONS) {
+    const own = measured(station);
+    if (own !== null) {
+      out[station] = { station, seconds: own, source: 'benchmark' };
+      continue;
+    }
+    if (goal) {
+      // An unreachable goal is not hidden: the target is floored and the
+      // overrun is reported, rather than quietly reverting to the pace model.
+      out[station] = { station, seconds: Math.max(30, goal.targets[station]), source: 'goal' };
+      continue;
+    }
+    out[station] = {
+      station,
+      seconds: Math.max(30, Math.round(STATION_REFERENCE[station].avg * scale)),
+      source: 'pace',
+    };
+  }
+  return out;
+}
+
+/** Which source the untested stations are currently leaning on. */
+export const estimateSource = (
+  estimates: Record<Station, StationEstimate>,
+): EstimateSource | null => {
+  const untested = STATIONS.map((s) => estimates[s]).filter((e) => e.source !== 'benchmark');
+  return untested.length === 0 ? null : (untested[0] as StationEstimate).source;
+};
 
 /**
  * Ranks stations by seconds available against the P25 target, worst first.
@@ -81,15 +271,22 @@ export interface StationGap {
  */
 export function rankWeaknesses(
   benchmarks: Partial<Record<Station, StationBenchmark>> = {},
+  estimates?: Record<Station, StationEstimate>,
 ): StationGap[] {
   return STATIONS.map((station) => {
     const mark = benchmarks[station];
-    const seconds = mark && Number.isFinite(mark.seconds) ? mark.seconds : STATION_REFERENCE[station].avg;
+    const measured = mark && Number.isFinite(mark.seconds);
+    // An untested station still gets a number - from the goal or the pace
+    // when one was worked out, from the population average otherwise - so the
+    // ranking is usable before any testing has happened.
+    const seconds = measured
+      ? (mark as StationBenchmark).seconds
+      : (estimates?.[station].seconds ?? STATION_REFERENCE[station].avg);
     return {
       station,
-      seconds,
+      seconds: Math.round(seconds),
       secondsAvailable: Math.round(seconds - stationP25(station)),
-      estimated: !mark,
+      estimated: !measured,
     };
   }).sort(
     (a, b) =>
